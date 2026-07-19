@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Outfit, Inter } from "next/font/google";
+export const dynamic = 'force-dynamic';
 import "./globals.css";
 import { CartProvider } from "../context/CartContext";
 import MainLayout from "../components/MainLayout";
