@@ -26,9 +26,21 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) return null
 
-        const user = await prisma.user.findUnique({
+        let user = await prisma.user.findUnique({
           where: { email: credentials.email as string }
         })
+
+        // Auto-create admin if logging in with admin credentials and it doesn't exist
+        if (!user && credentials.email === "admin@akademikmasa.com" && credentials.password === "admin") {
+          user = await prisma.user.create({
+            data: {
+              name: 'Yönetici',
+              email: 'admin@akademikmasa.com',
+              password: 'admin',
+              role: 'ADMIN',
+            }
+          })
+        }
 
         if (!user) return null
 
