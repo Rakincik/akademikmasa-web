@@ -1,0 +1,101 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  STUDENT
+  ADMIN
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String   // PLAINTEXT - As explicitly requested
+  name      String
+  phone     String?
+  role      Role     @default(STUDENT)
+  orders    Order[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Product {
+  id              String       @id @default(cuid())
+  title           String
+  slug            String       @unique
+  description     String       @db.Text
+  longDescription String?      @db.Text
+  price           Float
+  salePrice       Float?
+  imageUrl        String?
+  badge           String?      // e.g. "ERKEN KAYIT İNDİRİMİ"
+  priceBadge      String?      // e.g. "KISA SÜRELİ"
+  rating          Float?       @default(5.0)
+  reviewCount     Int?         @default(0)
+  studentCount    String?      // e.g. "1,240+"
+  features        String[]     // For "Neler Kazanacaksınız?"
+  pricingFeatures String[]     // For pricing box features
+  isPublished     Boolean      @default(true)
+  order           Int          @default(0)
+  
+  categoryId      String?
+  category        Category?    @relation(fields: [categoryId], references: [id])
+  
+  instructors     Instructor[] @relation("ProductInstructors")
+  orderItems      OrderItem[]
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+}
+
+model Category {
+  id        String    @id @default(cuid())
+  name      String    @unique
+  slug      String    @unique
+  products  Product[]
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}
+
+model Instructor {
+  id        String    @id @default(cuid())
+  name      String
+  title     String?   // e.g. "Matematik Öğretmeni"
+  imageUrl  String?
+  products  Product[] @relation("ProductInstructors")
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}
+
+model Order {
+  id          String      @id @default(cuid())
+  userId      String
+  user        User        @relation(fields: [userId], references: [id])
+  items       OrderItem[]
+  totalAmount Float
+  status      String      @default("PENDING") // PENDING, COMPLETED, FAILED
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+}
+
+model OrderItem {
+  id        String   @id @default(cuid())
+  orderId   String
+  order     Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId String
+  product   Product  @relation(fields: [productId], references: [id])
+  price     Float
+}
+
+model SiteContent {
+  id        String   @id @default(cuid())
+  pageId    String   @unique // e.g., "about", "home", "contact"
+  title     String   // e.g., "Hakkımızda", "Ana Sayfa"
+  content   String   @db.Text // JSON string containing all sections
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
