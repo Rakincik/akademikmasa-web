@@ -126,10 +126,10 @@ export default function KurslarClient({ products, instructors, categories }: { p
                     onDragEnd={handleDragEnd}
                     onDragOver={handleDragOver}
                   >
-                    <td className="px-4 py-4 text-slate-300 group-hover:text-slate-500 transition-colors">
-                      <GripVertical className="w-5 h-5 cursor-grab active:cursor-grabbing" />
+                    <td className="px-4 py-4 text-slate-400 group-hover:text-slate-600 transition-colors cursor-grab active:cursor-grabbing">
+                      <GripVertical className="w-5 h-5" />
                     </td>
-                    <td className="px-6 py-4 font-medium text-slate-900 pointer-events-none">
+                    <td className="px-6 py-4 font-medium text-slate-900">
                       <div className="flex items-center gap-3">
                         <div className="w-10 h-10 rounded-lg bg-slate-100 border border-slate-200 overflow-hidden flex items-center justify-center flex-shrink-0">
                           {product.imageUrl ? (
@@ -144,7 +144,7 @@ export default function KurslarClient({ products, instructors, categories }: { p
                         </div>
                       </div>
                     </td>
-                    <td className="px-6 py-4 pointer-events-none">
+                    <td className="px-6 py-4">
                       <div className="flex flex-col">
                         {product.salePrice ? (
                           <>
@@ -156,23 +156,29 @@ export default function KurslarClient({ products, instructors, categories }: { p
                         )}
                       </div>
                     </td>
-                    <td className="px-6 py-4 pointer-events-none">
+                    <td className="px-6 py-4">
                       <span className={`px-2.5 py-1 rounded-md text-xs font-semibold ${product.isPublished ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}`}>
                         {product.isPublished ? 'Yayında' : 'Taslak'}
                       </span>
                     </td>
-                    <td className="px-6 py-4 text-slate-500 pointer-events-none">
+                    <td className="px-6 py-4 text-slate-500">
                       {new Date(product.createdAt).toLocaleDateString('tr-TR')}
                     </td>
                     <td className="px-6 py-4 text-right">
                       <div className="flex items-center justify-end gap-2">
-                        <button className="p-2 text-slate-400 hover:text-brand-600 hover:bg-brand-50 rounded-lg transition-colors">
+                        <button className="p-2 text-slate-400 hover:text-brand-600 hover:bg-brand-50 rounded-lg transition-colors cursor-pointer">
                           <Eye className="w-4 h-4" />
                         </button>
-                        <button onClick={() => handleEdit(product)} className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors">
+                        <button 
+                          onPointerDown={(e) => { e.stopPropagation(); handleEdit(product); }} 
+                          className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors cursor-pointer"
+                        >
                           <Edit className="w-4 h-4" />
                         </button>
-                        <button onClick={() => handleDelete(product.id)} className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors">
+                        <button 
+                          onPointerDown={(e) => { e.stopPropagation(); handleDelete(product.id); }} 
+                          className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
+                        >
                           <Trash2 className="w-4 h-4" />
                         </button>
                       </div>

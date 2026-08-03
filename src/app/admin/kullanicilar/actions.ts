@@ -3,12 +3,14 @@
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 
-export async function updateUser(userId: string, data: { name: string, email: string, password?: string, role: string }) {
+export async function updateUser(userId: string, data: { name: string, email: string, password?: string, role: string, tc?: string, address?: string }) {
   try {
     const updateData: any = {
       name: data.name,
       email: data.email,
       role: data.role,
+      tc: data.tc || null,
+      address: data.address || null,
     };
     
     if (data.password) {
@@ -30,7 +32,7 @@ export async function updateUser(userId: string, data: { name: string, email: st
   }
 }
 
-export async function createUser(data: { name: string, email: string, password?: string, role: string }) {
+export async function createUser(data: { name: string, email: string, password?: string, role: string, tc?: string, address?: string }) {
   try {
     const existingUser = await prisma.user.findUnique({
       where: { email: data.email }
@@ -46,6 +48,8 @@ export async function createUser(data: { name: string, email: string, password?:
         email: data.email,
         password: data.password || "123456", // Default password if empty
         role: data.role as any, // "ADMIN" | "STUDENT" etc.
+        tc: data.tc || null,
+        address: data.address || null,
       },
     });
 

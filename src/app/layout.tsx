@@ -4,6 +4,9 @@ export const dynamic = 'force-dynamic';
 import "./globals.css";
 import { CartProvider } from "../context/CartContext";
 import MainLayout from "../components/MainLayout";
+import Providers from "../components/Providers";
+import Script from "next/script";
+
 const outfit = Outfit({
   variable: "--font-outfit",
   subsets: ["latin"],
@@ -26,11 +29,31 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="tr" className="scroll-smooth">
+      <head>
+        <Script id="facebook-pixel" strategy="afterInteractive">
+          {`
+            !function(f,b,e,v,n,t,s)
+            {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+            n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+            if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+            n.queue=[];t=b.createElement(e);t.async=!0;
+            t.src=v;s=b.getElementsByTagName(e)[0];
+            s.parentNode.insertBefore(t,s)}(window, document,'script',
+            'https://connect.facebook.net/en_US/fbevents.js');
+            fbq('init', '410353948080118');
+            fbq('track', 'PageView');
+          `}
+        </Script>
+      </head>
       <body
         className={`${outfit.variable} ${inter.variable} font-sans antialiased bg-slate-50 text-slate-900 min-h-screen flex flex-col`}
       >
-        <CartProvider>
-          <MainLayout
+        <noscript>
+          <img height="1" width="1" style={{ display: "none" }} src="https://www.facebook.com/tr?id=410353948080118&ev=PageView&noscript=1" alt="" />
+        </noscript>
+        <Providers>
+          <CartProvider>
+            <MainLayout
             footerContent={
               <footer className="bg-slate-900 text-slate-400 py-12 mt-auto border-t border-slate-800">
                 <div className="container mx-auto px-4 grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
@@ -77,7 +100,8 @@ export default function RootLayout({
           >
             {children}
           </MainLayout>
-        </CartProvider>
+          </CartProvider>
+        </Providers>
       </body>
     </html>
   );

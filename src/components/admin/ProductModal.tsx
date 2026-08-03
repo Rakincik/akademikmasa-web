@@ -18,6 +18,18 @@ interface Category {
   name: string;
 }
 
+const quillModules = {
+  toolbar: [
+    [{ 'header': [1, 2, 3, 4, false] }],
+    ['bold', 'italic', 'underline', 'strike'],
+    [{ 'color': [] }, { 'background': [] }],
+    [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+    [{ 'align': [] }],
+    ['link', 'image'],
+    ['clean']
+  ],
+};
+
 interface ProductModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -45,6 +57,7 @@ export default function ProductModal({ isOpen, onClose, instructors, categories,
     reviewCount: "0",
     studentCount: "",
     isPublished: true,
+    lmsCourseId: "",
   });
 
   const [features, setFeatures] = useState<string[]>([]);
@@ -54,6 +67,7 @@ export default function ProductModal({ isOpen, onClose, instructors, categories,
   
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
+  const [galleryUrls, setGalleryUrls] = useState<string[]>([]);
 
   // Dropdown states
   const [isCategoryDropdownOpen, setIsCategoryDropdownOpen] = useState(false);
@@ -78,17 +92,19 @@ export default function ProductModal({ isOpen, onClose, instructors, categories,
           reviewCount: initialData.reviewCount?.toString() || "0",
           studentCount: initialData.studentCount || "",
           isPublished: initialData.isPublished,
+          lmsCourseId: initialData.lmsCourseId || "",
         });
         setFeatures(initialData.features || []);
         setPricingFeatures(initialData.pricingFeatures || []);
         setInstructorIds(initialData.instructors?.map((i: any) => i.id) || []);
         setCategoryIds(initialData.categories?.map((c: any) => c.id) || []);
         setPreview(initialData.imageUrl || null);
+        setGalleryUrls(initialData.images || []);
       } else {
         // Reset
         setFormData({
           id: "", title: "", slug: "", description: "", longDescription: "", price: "", salePrice: "",
-          badge: "", priceBadge: "", rating: "5.0", reviewCount: "0", studentCount: "", isPublished: true,
+          badge: "", priceBadge: "", rating: "5.0", reviewCount: "0", studentCount: "", isPublished: true, lmsCourseId: "",
         });
         setFeatures([]);
         setPricingFeatures([]);
@@ -96,6 +112,7 @@ export default function ProductModal({ isOpen, onClose, instructors, categories,
         setCategoryIds([]);
         setFile(null);
         setPreview(null);
+        setGalleryUrls([]);
       }
       setStep(1);
     }
@@ -166,6 +183,27 @@ export default function ProductModal({ isOpen, onClose, instructors, categories,
     setter(prev => prev.filter((_, i) => i !== idx));
   };
 
+  const handleGalleryUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0) {
+      const filesArray = Array.from(e.target.files);
+      const newUrls: string[] = [];
+      for (const f of filesArray) {
+        const fileData = new FormData();
+        fileData.append("file", f);
+        try {
+          const uploadRes = await fetch("/api/upload", { method: "POST", body: fileData });
+          if (uploadRes.ok) {
+            const data = await uploadRes.json();
+            newUrls.push(data.url);
+          }
+        } catch (err) {
+          console.error("Gallery upload error:", err);
+        }
+      }
+      setGalleryUrls(prev => [...prev, ...newUrls]);
+    }
+  };
+
   const handleInstructorToggle = (id: string) => {
     setInstructorIds(prev => 
       prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]
@@ -203,6 +241,7 @@ export default function ProductModal({ isOpen, onClose, instructors, categories,
         price: cleanPrice,
         salePrice: cleanSalePrice,
         imageUrl,
+        images: galleryUrls,
         features,
         pricingFeatures,
         instructorIds,
@@ -250,6 +289,11 @@ export default function ProductModal({ isOpen, onClose, instructors, categories,
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-2">URL Slug</label>
                   <input type="text" value={formData.slug} onChange={e => setFormData({...formData, slug: e.target.value})} className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 outline-none" placeholder="turkce-oabt-canli-ders" />
+                </div>
+                <div className="col-span-2">
+                  <label className="block text-sm font-medium text-slate-700 mb-2">MURO LMS Grup / Kurs ID (Opsiyonel)</label>
+                  <input type="text" value={formData.lmsCourseId} onChange={e => setFormData({...formData, lmsCourseId: e.target.value})} className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 outline-none bg-indigo-50/50" placeholder="Örn: yks-sayisal-2024" />
+                  <p className="text-xs text-slate-500 mt-2">Öğrencinin satın aldıktan sonra sisteme kaydedileceği kurs ID'si. Boş bırakırsanız LMS entegrasyonu tetiklenmez.</p>
                 </div>
               </div>
 
@@ -324,31 +368,64 @@ export default function ProductModal({ isOpen, onClose, instructors, categories,
                     theme="snow" 
                     value={formData.longDescription} 
                     onChange={val => setFormData({...formData, longDescription: val})} 
+                    modules={quillModules}
                     className="h-64 pb-10" 
                   />
                 </div>
               </div>
 
-              <div>
-                <div className="flex justify-between items-center mb-2">
-                  <label className="block text-sm font-medium text-slate-700">Kapak Görseli</label>
-                  <span className="text-xs text-slate-400 bg-slate-100 px-2 py-1 rounded-md">Önerilen Boyut: 3:4 (Dikey)</span>
-                </div>
-                {!preview ? (
-                  <div onDragOver={e => e.preventDefault()} onDrop={handleDrop} className="w-full h-40 border-2 border-dashed border-slate-300 rounded-xl flex flex-col items-center justify-center text-slate-500 cursor-pointer relative hover:border-brand-500 hover:text-brand-600">
-                    <input type="file" accept="image/*" onChange={handleChange} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
-                    <Upload className="w-8 h-8 mb-2" />
-                    <span className="text-sm font-medium">Sürükle bırak veya seç</span>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <div className="flex justify-between items-center mb-2">
+                    <label className="block text-sm font-medium text-slate-700">Kapak Görseli</label>
+                    <span className="text-xs text-slate-400 bg-slate-100 px-2 py-1 rounded-md">Önerilen Boyut: 3:4 (Dikey)</span>
                   </div>
-                ) : (
-                  <div className="relative w-full h-40 rounded-xl overflow-hidden border border-slate-200 group">
-                    <img src={preview} alt="Preview" className="w-full h-full object-cover" />
-                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3">
-                       <button onClick={() => { setFile(null); setPreview(null); }} className="bg-red-500 text-white p-2 rounded-full shadow-lg hover:bg-red-600 transition-colors" title="Sil"><X className="w-4 h-4" /></button>
+                  {!preview ? (
+                    <div onDragOver={e => e.preventDefault()} onDrop={handleDrop} className="w-full h-40 border-2 border-dashed border-slate-300 rounded-xl flex flex-col items-center justify-center text-slate-500 cursor-pointer relative hover:border-brand-500 hover:text-brand-600">
+                      <input type="file" accept="image/*" onChange={handleChange} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
+                      <Upload className="w-8 h-8 mb-2" />
+                      <span className="text-sm font-medium">Sürükle bırak veya seç</span>
+                    </div>
+                  ) : (
+                    <div className="relative w-full h-40 rounded-xl overflow-hidden border border-slate-200 group">
+                      <img src={preview} alt="Preview" className="w-full h-full object-cover" />
+                      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3">
+                         <button type="button" onClick={() => { setFile(null); setPreview(null); }} className="bg-red-500 text-white p-2 rounded-full shadow-lg hover:bg-red-600 transition-colors" title="Sil"><X className="w-4 h-4" /></button>
+                       </div>
+                    </div>
+                  )}
+                </div>
+
+                <div>
+                  <div className="flex justify-between items-center mb-2">
+                    <label className="block text-sm font-medium text-slate-700">Ürün Görsel Galerisi (Slayt Görselleri)</label>
+                    <span className="text-xs text-slate-400 bg-slate-100 px-2 py-1 rounded-md">Önerilen Boyut: 3:4 (Dikey)</span>
+                  </div>
+                  <div className="grid grid-cols-3 gap-3">
+                    {galleryUrls.map((url, idx) => (
+                      <div key={idx} className="relative h-20 rounded-xl overflow-hidden border border-slate-200 group">
+                        <img src={url} alt={`Gallery ${idx}`} className="w-full h-full object-cover" />
+                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                          <button 
+                            type="button"
+                            onClick={() => setGalleryUrls(prev => prev.filter((_, i) => i !== idx))} 
+                            className="bg-red-500 text-white p-1 rounded-full shadow-lg hover:bg-red-600 transition-colors"
+                            title="Sil"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                    <div className="relative h-20 border-2 border-dashed border-slate-300 rounded-xl flex flex-col items-center justify-center text-slate-500 cursor-pointer hover:border-brand-500 hover:text-brand-600 transition-colors">
+                      <input type="file" multiple accept="image/*" onChange={handleGalleryUpload} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
+                      <Plus className="w-5 h-5 mb-0.5" />
+                      <span className="text-[10px] font-bold">Ekle</span>
                     </div>
                   </div>
-                )}
+                </div>
               </div>
+
             </div>
           )}
 

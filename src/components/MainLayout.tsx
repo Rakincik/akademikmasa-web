@@ -5,7 +5,8 @@ import Header from "./Header";
 
 export default function MainLayout({ children, footerContent, whatsappButton }: { children: React.ReactNode, footerContent: React.ReactNode, whatsappButton: React.ReactNode }) {
   const pathname = usePathname();
-  const isDashboard = pathname?.startsWith("/admin") || pathname?.startsWith("/panel");
+  const isDashboard = pathname?.startsWith("/admin");
+  const isPanel = pathname?.startsWith("/panel");
 
   if (isDashboard) {
     return <main className="flex-grow">{children}</main>;
@@ -15,8 +16,8 @@ export default function MainLayout({ children, footerContent, whatsappButton }: 
     <>
       <Header />
       <main className="flex-grow">{children}</main>
-      {footerContent}
-      {whatsappButton}
+      {!isPanel && footerContent}
+      {!isPanel && whatsappButton}
     </>
   );
 }

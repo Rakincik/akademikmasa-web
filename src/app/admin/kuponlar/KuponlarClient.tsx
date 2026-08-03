@@ -6,7 +6,7 @@ import CouponStatsModal from "@/components/admin/CouponStatsModal";
 import DeleteConfirmModal from "@/components/admin/DeleteConfirmModal";
 import { deleteCoupon } from "./actions";
 
-export default function KuponlarClient({ initialCoupons, isInfluencerMode = false }: { initialCoupons: any[], isInfluencerMode?: boolean }) {
+export default function KuponlarClient({ initialCoupons, isInfluencerMode = false, products = [] }: { initialCoupons: any[], isInfluencerMode?: boolean, products?: any[] }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingCoupon, setEditingCoupon] = useState<any>(null);
   
@@ -170,6 +170,7 @@ export default function KuponlarClient({ initialCoupons, isInfluencerMode = fals
         onClose={() => setIsModalOpen(false)} 
         initialData={editingCoupon} 
         isInfluencerMode={isInfluencerMode}
+        products={products}
       />
 
       <CouponStatsModal 

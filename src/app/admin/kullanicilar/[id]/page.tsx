@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { notFound } from "next/navigation";
-import { ArrowLeft, User as UserIcon, Mail, Phone, Calendar, ShoppingBag, Shield, CheckCircle2, Clock } from "lucide-react";
+import { ArrowLeft, User as UserIcon, Mail, Phone, Calendar, ShoppingBag, Shield, CheckCircle2, Clock, MapPin, CreditCard } from "lucide-react";
 import Link from "next/link";
 
 export default async function UserDetailPage({ params }: { params: Promise<{ id: string }> }) {
@@ -82,6 +82,26 @@ export default async function UserDetailPage({ params }: { params: Promise<{ id:
                 <div>
                   <p className="text-xs text-slate-400 font-medium">Telefon</p>
                   <p className="font-semibold text-slate-900">{user.phone || "Belirtilmemiş"}</p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-3 text-slate-600">
+                <div className="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center text-slate-400">
+                  <CreditCard className="w-5 h-5" />
+                </div>
+                <div>
+                  <p className="text-xs text-slate-400 font-medium">T.C. Kimlik No</p>
+                  <p className="font-semibold text-slate-900">{user.tc || "Belirtilmemiş"}</p>
+                </div>
+              </div>
+
+              <div className="flex items-start gap-3 text-slate-600">
+                <div className="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center text-slate-400 mt-1 shrink-0">
+                  <MapPin className="w-5 h-5" />
+                </div>
+                <div>
+                  <p className="text-xs text-slate-400 font-medium">Açık Adres</p>
+                  <p className="font-semibold text-slate-900 whitespace-pre-wrap leading-relaxed">{user.address || "Belirtilmemiş"}</p>
                 </div>
               </div>
 

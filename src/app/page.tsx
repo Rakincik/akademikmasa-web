@@ -4,18 +4,28 @@ import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 
 export default async function Home() {
-  const dbCourses = await prisma.product.findMany({
-    where: { isPublished: true },
-    take: 6,
-    orderBy: { order: 'asc' }
-  });
+  let dbCourses: any[] = [];
+  try {
+    dbCourses = await prisma.product.findMany({
+      where: { isPublished: true },
+      take: 6,
+      orderBy: { order: 'asc' }
+    });
+  } catch (e) {
+    console.error("Prisma error (dbCourses):", e);
+  }
 
-  const homeContent = await prisma.siteContent.findUnique({
-    where: { pageId: 'home' }
-  });
+  let homeContent: any = null;
+  try {
+    homeContent = await prisma.siteContent.findUnique({
+      where: { pageId: 'home' }
+    });
+  } catch (e) {
+    console.error("Prisma error (homeContent):", e);
+  }
 
   // Varsayılan veriler (CMS'ten gelmezse)
-  let heroData = {
+  let heroData: any = {
     badge: "2027 Erken Kayıt Fırsatları Başladı",
     title1: "Geleceğinize",
     title2: "Akademik Masa",
@@ -30,7 +40,7 @@ export default async function Home() {
   if (homeContent) {
     try {
       const parsed = JSON.parse(homeContent.content);
-      if (parsed.hero) heroData = parsed.hero;
+      if (parsed.hero) heroData = { ...heroData, ...parsed.hero };
     } catch (e) {
       console.error("Home content parse error:", e);
     }
@@ -49,7 +59,7 @@ export default async function Home() {
           <div className="flex flex-col lg:flex-row items-center gap-16">
             
             {/* Sol Taraf: Metinler (Kurumsal, Net, Güçlü) */}
-            <div className="flex-1 text-center lg:text-left space-y-8">
+            <div className="w-full lg:w-5/12 text-center lg:text-left space-y-8">
               
               <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white border border-slate-200 shadow-sm text-slate-600 font-semibold text-sm mb-2">
                 <span className="flex h-2 w-2 rounded-full bg-brand-500 animate-pulse"></span>
@@ -61,7 +71,7 @@ export default async function Home() {
                 <span className="text-brand-600">{heroData.title2}</span> {heroData.title3}
               </h1>
               
-              <p className="text-xl text-slate-600 max-w-2xl mx-auto lg:mx-0 leading-relaxed">
+              <p className="text-lg md:text-xl text-slate-600 leading-relaxed max-w-2xl mx-auto lg:mx-0">
                 {heroData.description}
               </p>
               
@@ -93,20 +103,20 @@ export default async function Home() {
                     <Star className="w-6 h-6 fill-amber-400" />
                   </div>
                   <div className="text-left">
-                    <p className="text-slate-900 font-bold text-sm">{heroData.stats[0]?.value || "5.000+"}</p>
-                    <p className="text-slate-500 text-xs font-semibold uppercase tracking-wider">{heroData.stats[0]?.label || "Mutlu Öğrenci"}</p>
+                    <p className="text-slate-900 font-bold text-sm">{heroData.stats?.[0]?.value || "5.000+"}</p>
+                    <p className="text-slate-500 text-xs font-semibold uppercase tracking-wider">{heroData.stats?.[0]?.label || "Mutlu Öğrenci"}</p>
                   </div>
                 </div>
               </div>
             </div>
             
             {/* Sağ Taraf: Kurumsal, Şık Görsel Sunum */}
-            <div className="flex-1 w-full mt-16 lg:mt-0 relative">
-              <div className="relative z-10 rounded-[2rem] bg-white p-3 shadow-[0_20px_60px_rgba(0,0,0,0.08)] border border-slate-100">
+            <div className="w-full lg:w-7/12 mt-16 lg:mt-0 relative">
+              <div className="relative z-10">
                 <img 
-                  src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?q=80&w=2071&auto=format&fit=crop" 
+                  src={heroData.imageUrl || "https://images.unsplash.com/photo-1522202176988-66273c2fd55f?q=80&w=2071&auto=format&fit=crop"} 
                   alt="Öğrenciler" 
-                  className="rounded-[1.5rem] w-full object-cover aspect-[4/3]"
+                  className="rounded-[2rem] w-full object-cover object-center aspect-[2.2/1] shadow-[0_20px_60px_rgba(0,0,0,0.08)]"
                 />
                 
                 {/* Floating Corporate Badge: Başarı Oranı */}
@@ -115,8 +125,8 @@ export default async function Home() {
                     <CheckCircle2 className="w-6 h-6" />
                   </div>
                   <div>
-                    <p className="text-xs text-slate-500 font-bold uppercase tracking-wider mb-0.5">{heroData.stats[1]?.label || "Başarı Oranı"}</p>
-                    <p className="text-2xl font-black text-slate-900">{heroData.stats[1]?.value || "%98.4"}</p>
+                    <p className="text-xs text-slate-500 font-bold uppercase tracking-wider mb-0.5">{heroData.stats?.[1]?.label || "Başarı Oranı"}</p>
+                    <p className="text-2xl font-black text-slate-900">{heroData.stats?.[1]?.value || "%98.4"}</p>
                   </div>
                 </div>
 

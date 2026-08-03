@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Eye, ArrowUpDown, ChevronDown, ChevronUp, Edit2, X, Save } from "lucide-react";
+import { Eye, ArrowUpDown, ChevronDown, ChevronUp, Edit2, X, Save, Search } from "lucide-react";
 import Link from "next/link";
 import { User } from "@prisma/client";
 import { updateUser, createUser } from "./actions";
@@ -12,14 +12,27 @@ interface KullanicilarClientProps {
 
 export default function KullanicilarClient({ users }: KullanicilarClientProps) {
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
+  const [searchTerm, setSearchTerm] = useState("");
   const [editingUser, setEditingUser] = useState<User | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isRoleDropdownOpen, setIsRoleDropdownOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-  const [editForm, setEditForm] = useState({ name: "", email: "", password: "", role: "ADMIN" });
+  const [editForm, setEditForm] = useState({ name: "", email: "", password: "", role: "STUDENT", tc: "", address: "" });
+
+  // Filter users by search term (case-insensitive with Turkish character support)
+  const filteredUsers = users.filter(user => {
+    const search = searchTerm.toLocaleLowerCase("tr-TR").trim();
+    if (!search) return true;
+    return (
+      user.name.toLocaleLowerCase("tr-TR").includes(search) ||
+      user.email.toLocaleLowerCase("tr-TR").includes(search) ||
+      (user.phone && user.phone.includes(search)) ||
+      (user.tc && user.tc.includes(search))
+    );
+  });
 
   // Sort by name if asc, else by createdAt
-  const sortedUsers = [...users].sort((a, b) => {
+  const sortedUsers = [...filteredUsers].sort((a, b) => {
     if (sortOrder === "asc") {
       return a.name.localeCompare(b.name, "tr");
     } else {
@@ -33,13 +46,20 @@ export default function KullanicilarClient({ users }: KullanicilarClientProps) {
 
   const openEditModal = (user: User) => {
     setEditingUser(user);
-    setEditForm({ name: user.name, email: user.email, password: user.password, role: user.role });
+    setEditForm({ 
+      name: user.name, 
+      email: user.email, 
+      password: user.password, 
+      role: user.role,
+      tc: user.tc || "",
+      address: user.address || ""
+    });
     setIsModalOpen(true);
   };
 
   const handleNewUser = () => {
     setEditingUser(null);
-    setEditForm({ name: "", email: "", password: "", role: "ADMIN" });
+    setEditForm({ name: "", email: "", password: "", role: "STUDENT", tc: "", address: "" });
     setIsModalOpen(true);
   };
 
@@ -84,6 +104,23 @@ export default function KullanicilarClient({ users }: KullanicilarClientProps) {
         >
           Yeni Kullanıcı Ekle
         </button>
+      </div>
+
+      {/* Arama Çubuğu */}
+      <div className="flex flex-col sm:flex-row gap-4 items-center justify-between bg-white p-4 rounded-2xl border border-slate-100 shadow-sm">
+        <div className="relative w-full sm:max-w-md">
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5" />
+          <input 
+            type="text"
+            placeholder="İsim, e-posta, telefon veya T.C. No ile ara..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full pl-12 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-colors font-medium text-slate-900 placeholder:text-slate-400 text-sm"
+          />
+        </div>
+        <div className="text-sm font-semibold text-slate-500 bg-slate-50 px-3.5 py-2 rounded-xl border border-slate-200 w-full sm:w-auto text-center shrink-0">
+          Bulunan: <span className="text-brand-600 font-bold">{filteredUsers.length}</span> / {users.length}
+        </div>
       </div>
 
       <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
@@ -200,7 +237,7 @@ export default function KullanicilarClient({ users }: KullanicilarClientProps) {
                       className="w-full px-4 py-3 rounded-xl border border-slate-200 focus-within:ring-2 focus-within:ring-brand-500/20 focus-within:border-brand-500 outline-none bg-white flex justify-between items-center cursor-pointer transition-all"
                       onClick={() => setIsRoleDropdownOpen(!isRoleDropdownOpen)}
                     >
-                      <span className="font-medium text-slate-700">{editForm.role}</span>
+                      <span className="font-medium text-slate-700">{editForm.role === "ADMIN" ? "Yönetici" : "Öğrenci"}</span>
                       <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform ${isRoleDropdownOpen ? "rotate-180" : ""}`} />
                     </div>
                     
@@ -209,18 +246,46 @@ export default function KullanicilarClient({ users }: KullanicilarClientProps) {
                         <div className="fixed inset-0 z-10" onClick={() => setIsRoleDropdownOpen(false)}></div>
                         <div className="absolute z-20 mt-2 w-full bg-white border border-slate-200 rounded-xl shadow-lg overflow-hidden">
                           <div 
+                            className="px-4 py-3 hover:bg-slate-50 cursor-pointer font-medium text-slate-700 transition-colors border-b border-slate-100"
+                            onClick={() => {
+                              setEditForm({...editForm, role: "STUDENT"});
+                              setIsRoleDropdownOpen(false);
+                            }}
+                          >
+                            Öğrenci
+                          </div>
+                          <div 
                             className="px-4 py-3 hover:bg-slate-50 cursor-pointer font-medium text-slate-700 transition-colors"
                             onClick={() => {
                               setEditForm({...editForm, role: "ADMIN"});
                               setIsRoleDropdownOpen(false);
                             }}
                           >
-                            ADMIN
+                            Yönetici
                           </div>
                         </div>
                       </>
                     )}
                   </div>
+                </div>
+                <div>
+                  <label className="block text-sm font-bold text-slate-700 mb-1">T.C. Kimlik No</label>
+                  <input 
+                    type="text" 
+                    maxLength={11}
+                    value={editForm.tc}
+                    onChange={e => setEditForm({...editForm, tc: e.target.value.replace(/\D/g, "")})}
+                    className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 outline-none transition-all"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-bold text-slate-700 mb-1">Açık Adres</label>
+                  <textarea 
+                    rows={2}
+                    value={editForm.address}
+                    onChange={e => setEditForm({...editForm, address: e.target.value})}
+                    className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 outline-none transition-all resize-none text-sm"
+                  />
                 </div>
                 <div>
                   <label className="block text-sm font-bold text-slate-700 mb-1">Şifre</label>

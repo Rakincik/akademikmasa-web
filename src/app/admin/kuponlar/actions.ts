@@ -7,7 +7,7 @@ export async function saveCoupon(data: any) {
   const { 
     id, code, discountType, discountValue, isActive, 
     isInfluencer, influencerName, influencerEmail,
-    startDate, endDate, usageLimit
+    startDate, endDate, usageLimit, allowedProductIds
   } = data;
 
   const baseData = {
@@ -21,6 +21,7 @@ export async function saveCoupon(data: any) {
     startDate: startDate ? new Date(startDate) : null,
     endDate: endDate ? new Date(endDate) : null,
     usageLimit: usageLimit ? parseInt(usageLimit, 10) : null,
+    allowedProductIds: allowedProductIds || [],
   };
 
   if (id) {

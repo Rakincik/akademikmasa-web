@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import AddToCartButton from "./AddToCartButton";
+import ProductGallery from "./ProductGallery";
 
 export default async function ProductDetailPage({ params }: { params: Promise<{ slug: string }> }) {
   const resolvedParams = await params;
@@ -17,6 +18,8 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
   if (!course) {
     return notFound();
   }
+
+  const allImages = [course.imageUrl, ...(course.images || [])].filter(Boolean) as string[];
 
   return (
     <div className="bg-slate-50 min-h-screen pb-32">
@@ -121,21 +124,7 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
               {/* Resim Container - Yukarı kalkar ve büyür */}
               <div className="relative group">
                 <div className="absolute -inset-1 bg-gradient-to-r from-brand-500 to-amber-500 rounded-[3rem] blur-xl opacity-30 group-hover:opacity-60 transition duration-500"></div>
-                {course.imageUrl ? (
-                  <img 
-                    src={course.imageUrl} 
-                    alt={course.title} 
-                    className="w-full object-cover rounded-[2.5rem] border-8 border-slate-800 shadow-2xl relative z-10" 
-                    style={{ aspectRatio: '3/4' }}
-                  />
-                ) : (
-                  <div 
-                    className="w-full rounded-[2.5rem] border-8 border-slate-800 shadow-2xl relative z-10 flex items-center justify-center bg-slate-800 text-slate-500 font-bold"
-                    style={{ aspectRatio: '3/4' }}
-                  >
-                    Görsel Bulunmuyor
-                  </div>
-                )}
+                <ProductGallery images={allImages} title={course.title} />
               </div>
             </div>
 

@@ -28,11 +28,12 @@ export default function LoginPage() {
       setError("Giriş başarısız. Lütfen e-posta ve şifrenizi kontrol edin.");
       setLoading(false);
     } else {
-      // Eğer giren kişi adminse /admin tarafına, öğrenciyse /panel tarafına gönder
+      const searchParams = new URLSearchParams(window.location.search);
+      const callbackUrl = searchParams.get("callbackUrl");
       if (email === "admin@akademikmasa.com") {
         router.push("/admin");
       } else {
-        router.push("/panel");
+        router.push(callbackUrl || "/panel");
       }
       router.refresh();
     }

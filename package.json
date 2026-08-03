@@ -5,13 +5,14 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "next start",
+    "start": "node server.js",
     "lint": "eslint",
     "db:push": "prisma db push",
     "db:generate": "prisma generate",
     "create-admin": "node create-admin.js"
   },
   "dependencies": {
+    "@nopeion/shopier": "^2.1.0",
     "@prisma/client": "^5.22.0",
     "lucide-react": "^1.25.0",
     "next": "16.2.10",

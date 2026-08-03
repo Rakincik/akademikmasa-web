@@ -13,6 +13,7 @@ export async function saveProduct(data: any) {
     price,
     salePrice,
     imageUrl,
+    images = [],
     badge,
     priceBadge,
     rating,
@@ -22,7 +23,8 @@ export async function saveProduct(data: any) {
     pricingFeatures,
     isPublished,
     instructorIds,
-    categoryIds = [] // default to empty array
+    categoryIds = [], // default to empty array
+    lmsCourseId
   } = data;
 
   const generatedSlug = slug || title
@@ -46,6 +48,7 @@ export async function saveProduct(data: any) {
     price: parseFloat(price),
     salePrice: salePrice ? parseFloat(salePrice) : null,
     imageUrl,
+    images,
     badge,
     priceBadge,
     rating: parseFloat(rating),
@@ -54,6 +57,7 @@ export async function saveProduct(data: any) {
     features,
     pricingFeatures,
     isPublished,
+    lmsCourseId: lmsCourseId || null,
   };
 
   if (id) {

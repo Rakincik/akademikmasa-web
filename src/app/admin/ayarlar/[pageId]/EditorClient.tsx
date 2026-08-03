@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { ArrowLeft, CheckCircle2, ChevronRight, Save, History, Plus, Trash2, GripVertical, Image as ImageIcon } from "lucide-react";
 import Link from "next/link";
-import { saveSiteContent } from "../actions";
 import { useRouter } from "next/navigation";
 
 interface EditorClientProps {
@@ -15,8 +14,11 @@ interface EditorClientProps {
 export default function EditorClient({ pageId, initialTitle, initialData }: EditorClientProps) {
   const router = useRouter();
   const [isSaving, setIsSaving] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
   const [activeSection, setActiveSection] = useState("hero");
   const [toast, setToast] = useState<{ show: boolean; message: string; type: "success" | "error" }>({ show: false, message: "", type: "success" });
+  const [heroImageFile, setHeroImageFile] = useState<File | null>(null);
+  const [heroImagePreview, setHeroImagePreview] = useState<string | null>(null);
 
   // Sayfaya Göre Bölümler (Configs)
   const pageConfigs: Record<string, any[]> = {
@@ -53,6 +55,7 @@ export default function EditorClient({ pageId, initialTitle, initialData }: Edit
         title2: "Akademik Masa",
         title3: "ile Hazırlanın.",
         description: "Uzman kadromuzla KPSS, ÖABT ve tüm akademik sınavlarda hedeflerinize en hızlı şekilde ulaşın. Hemen kaydolun, rakiplerinizin bir adım önüne geçin.",
+        imageUrl: "https://images.unsplash.com/photo-1522202176988-66273c2fd55f?q=80&w=2071&auto=format&fit=crop",
         stats: [
           { value: "5.000+", label: "Mutlu Derece Öğrencisi" },
           { value: "%98.4", label: "Başarı Oranı" }
@@ -65,13 +68,43 @@ export default function EditorClient({ pageId, initialTitle, initialData }: Edit
 
   const handleSave = async () => {
     setIsSaving(true);
-    const result = await saveSiteContent(pageId, initialTitle, formData);
-    setIsSaving(false);
-    
-    if (result.success) {
-      showToast("Başarıyla kaydedildi!", "success");
-    } else {
-      showToast(result.error || "Bir hata oluştu.", "error");
+    let finalFormData = { ...formData };
+
+    try {
+      if (heroImageFile) {
+        setIsUploading(true);
+        const uploadData = new FormData();
+        uploadData.append("file", heroImageFile);
+        const uploadRes = await fetch("/api/upload", { method: "POST", body: uploadData });
+        if (uploadRes.ok) {
+          const data = await uploadRes.json();
+          finalFormData = {
+            ...finalFormData,
+            hero: { ...finalFormData.hero, imageUrl: data.url }
+          };
+        }
+        setIsUploading(false);
+      }
+
+      const apiRes = await fetch("/api/save-content", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ pageId, title: initialTitle, contentData: finalFormData })
+      });
+      const result = await apiRes.json();
+      
+      setIsSaving(false);
+      
+      if (result.success) {
+        showToast("Başarıyla kaydedildi!", "success");
+        setHeroImageFile(null); // Reset file after save
+      } else {
+        showToast(result.error || "Bir hata oluştu.", "error");
+      }
+    } catch (e) {
+      setIsSaving(false);
+      setIsUploading(false);
+      showToast("Bir hata oluştu.", "error");
     }
   };
 
@@ -88,6 +121,14 @@ export default function EditorClient({ pageId, initialTitle, initialData }: Edit
         [field]: value
       }
     }));
+  };
+
+  const handleHeroImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const selectedFile = e.target.files[0];
+      setHeroImageFile(selectedFile);
+      setHeroImagePreview(URL.createObjectURL(selectedFile));
+    }
   };
 
   const handleStatChange = (index: number, field: string, value: string) => {
@@ -179,11 +220,11 @@ export default function EditorClient({ pageId, initialTitle, initialData }: Edit
           
           <button 
             onClick={handleSave}
-            disabled={isSaving}
+            disabled={isSaving || isUploading}
             className="w-full bg-slate-900 text-white font-bold py-3.5 px-4 rounded-xl flex items-center justify-center gap-2 hover:bg-brand-600 transition-all shadow-lg hover:shadow-brand-500/25 disabled:opacity-50"
           >
-            {isSaving ? (
-              <span className="animate-pulse">Kaydediliyor...</span>
+            {isSaving || isUploading ? (
+              <span className="animate-pulse">{isUploading ? "Görsel Yükleniyor..." : "Kaydediliyor..."}</span>
             ) : (
               <>
                 <Save className="w-5 h-5" /> Kaydet
@@ -275,6 +316,45 @@ export default function EditorClient({ pageId, initialTitle, initialData }: Edit
                     className="w-full h-32 bg-white px-4 py-3 text-slate-700 outline-none resize-none"
                   ></textarea>
                 </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Görsel (Resim Yükle veya Link Gir)</label>
+                
+                {/* Dosya Yükleme Alanı */}
+                <div className="mb-3 flex items-center gap-4">
+                  {(heroImagePreview || formData.hero?.imageUrl) && (
+                    <img 
+                      src={heroImagePreview || formData.hero?.imageUrl} 
+                      alt="Hero Preview" 
+                      className="w-20 h-20 rounded-xl object-cover border border-slate-200" 
+                    />
+                  )}
+                  <div className="flex-1">
+                    <input 
+                      type="file" 
+                      accept="image/*"
+                      onChange={handleHeroImageChange}
+                      className="block w-full text-sm text-slate-500 file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-brand-50 file:text-brand-700 hover:file:bg-brand-100 transition-all"
+                    />
+                    <p className="text-xs text-slate-400 mt-1">Dosya seçtiğinde mevcut link yerine yüklenen resim geçerli olur.</p>
+                  </div>
+                </div>
+
+                {/* Alternatif URL Girişi */}
+                <input 
+                  type="text" 
+                  value={formData.hero?.imageUrl || ""}
+                  onChange={(e) => {
+                    handleFieldChange("hero", "imageUrl", e.target.value);
+                    if (heroImageFile) {
+                      setHeroImageFile(null);
+                      setHeroImagePreview(null);
+                    }
+                  }}
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-slate-900 font-medium focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-all"
+                  placeholder="Veya URL yapıştır (https://...)"
+                />
               </div>
 
               <div>

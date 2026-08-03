@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { X, Tag, Percent, DollarSign, Loader2 } from "lucide-react";
 import { saveCoupon } from "@/app/admin/kuponlar/actions";
 
-export default function CouponModal({ isOpen, onClose, initialData, isInfluencerMode = false }: { isOpen: boolean, onClose: () => void, initialData?: any, isInfluencerMode?: boolean }) {
+export default function CouponModal({ isOpen, onClose, initialData, isInfluencerMode = false, products = [] }: { isOpen: boolean, onClose: () => void, initialData?: any, isInfluencerMode?: boolean, products?: any[] }) {
   const [formData, setFormData] = useState({
     id: "",
     code: "",
@@ -16,6 +16,7 @@ export default function CouponModal({ isOpen, onClose, initialData, isInfluencer
     startDate: "",
     endDate: "",
     usageLimit: "",
+    allowedProductIds: [] as string[],
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
@@ -36,6 +37,7 @@ export default function CouponModal({ isOpen, onClose, initialData, isInfluencer
           startDate: initialData.startDate ? new Date(initialData.startDate).toISOString().slice(0, 16) : "",
           endDate: initialData.endDate ? new Date(initialData.endDate).toISOString().slice(0, 16) : "",
           usageLimit: initialData.usageLimit ? initialData.usageLimit.toString() : "",
+          allowedProductIds: initialData.allowedProductIds || [],
         });
       } else {
         setFormData({
@@ -50,6 +52,7 @@ export default function CouponModal({ isOpen, onClose, initialData, isInfluencer
           startDate: "",
           endDate: "",
           usageLimit: "",
+          allowedProductIds: [],
         });
       }
     }
@@ -162,6 +165,74 @@ export default function CouponModal({ isOpen, onClose, initialData, isInfluencer
               />
               <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-500"></div>
             </label>
+          </div>
+
+          {/* Product Validation Settings */}
+          <div className="space-y-3 p-4 bg-slate-50 rounded-xl border border-slate-100">
+            <div>
+              <p className="font-bold text-slate-900 text-sm">Geçerli Olacağı Ürünler</p>
+              <p className="text-xs text-slate-500 mb-2">Kuponun hangi eğitimlerde geçerli olacağını seçin.</p>
+            </div>
+            
+            <div className="flex gap-4">
+              <button
+                type="button"
+                onClick={() => setFormData({...formData, allowedProductIds: []})}
+                className={`flex-1 py-2 px-3 rounded-lg border font-bold text-xs transition-all ${
+                  formData.allowedProductIds.length === 0
+                    ? "bg-brand-50 border-brand-500 text-brand-700"
+                    : "bg-white border-slate-200 text-slate-500 hover:border-slate-300"
+                }`}
+              >
+                Tüm Ürünler
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  if (formData.allowedProductIds.length === 0 && products.length > 0) {
+                    setFormData({...formData, allowedProductIds: [products[0].id]});
+                  }
+                }}
+                className={`flex-1 py-2 px-3 rounded-lg border font-bold text-xs transition-all ${
+                  formData.allowedProductIds.length > 0
+                    ? "bg-brand-50 border-brand-500 text-brand-700"
+                    : "bg-white border-slate-200 text-slate-500 hover:border-slate-300"
+                }`}
+              >
+                Seçili Ürünler ({formData.allowedProductIds.length})
+              </button>
+            </div>
+
+            {formData.allowedProductIds.length > 0 && (
+              <div className="border border-slate-200 rounded-xl p-3 bg-white max-h-[160px] overflow-y-auto space-y-2 custom-scrollbar mt-2">
+                {products.map((product) => {
+                  const isChecked = formData.allowedProductIds.includes(product.id);
+                  return (
+                    <label key={product.id} className="flex items-center gap-3 cursor-pointer p-1.5 hover:bg-slate-50 rounded-lg transition-colors">
+                      <input
+                        type="checkbox"
+                        checked={isChecked}
+                        onChange={(e) => {
+                          let updatedIds = [...formData.allowedProductIds];
+                          if (e.target.checked) {
+                            if (!updatedIds.includes(product.id)) {
+                              updatedIds.push(product.id);
+                            }
+                          } else {
+                            updatedIds = updatedIds.filter(id => id !== product.id);
+                          }
+                          setFormData({...formData, allowedProductIds: updatedIds});
+                        }}
+                        className="rounded text-brand-600 focus:ring-brand-500 w-4 h-4 border-slate-300"
+                      />
+                      <span className="text-xs font-semibold text-slate-700 select-none">
+                        {product.title}
+                      </span>
+                    </label>
+                  );
+                })}
+              </div>
+            )}
           </div>
 
           {/* Constraints */}

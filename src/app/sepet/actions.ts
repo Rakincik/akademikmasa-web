@@ -38,7 +38,39 @@ export async function validateCoupon(code: string) {
     coupon: {
       code: coupon.code,
       discountType: coupon.discountType,
-      discountValue: coupon.discountValue
+      discountValue: coupon.discountValue,
+      allowedProductIds: coupon.allowedProductIds || []
     }
   };
+}
+
+export async function getRecommendedProducts() {
+  try {
+    const products = await prisma.product.findMany({
+      where: {
+        isPublished: true,
+      },
+      include: {
+        instructors: true,
+      },
+      orderBy: {
+        order: 'asc',
+      },
+    });
+    return {
+      success: true,
+      products: products.map(p => ({
+        id: p.id,
+        title: p.title,
+        price: p.price,
+        salePrice: p.salePrice,
+        image: p.imageUrl || "",
+        slug: p.slug,
+        instructor: p.instructors?.[0]?.name || "Akademik Masa",
+      })),
+    };
+  } catch (error) {
+    console.error("Failed to fetch recommended products:", error);
+    return { success: false, products: [] };
+  }
 }

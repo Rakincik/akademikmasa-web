@@ -12,12 +12,20 @@ enum Role {
   ADMIN
 }
 
+enum LmsStatus {
+  PENDING
+  SUCCESS
+  FAILED
+}
+
 model User {
   id        String   @id @default(cuid())
   email     String   @unique
   password  String   // PLAINTEXT - As explicitly requested
   name      String
+  tc        String?
   phone     String?
+  address   String?
   role      Role     @default(STUDENT)
   orders    Order[]
   createdAt DateTime @default(now())
@@ -33,6 +41,7 @@ model Product {
   price           Float
   salePrice       Float?
   imageUrl        String?
+  images          String[]
   badge           String?      // e.g. "ERKEN KAYIT İNDİRİMİ"
   priceBadge      String?      // e.g. "KISA SÜRELİ"
   rating          Float?       @default(5.0)
@@ -42,6 +51,7 @@ model Product {
   pricingFeatures String[]     // For pricing box features
   isPublished     Boolean      @default(true)
   order           Int          @default(0)
+  lmsCourseId     String?      // MURO LMS tarafındaki Paket/Kurs kodu
   
   categories      Category[] @relation("ProductCategories")
   
@@ -80,8 +90,10 @@ model Order {
   items       OrderItem[]
   totalAmount Float
   status      String      @default("PENDING") // PENDING, COMPLETED, FAILED
+  paymentId   String?     // Shopier Order/Payment ID
   couponId    String?
   coupon      Coupon?     @relation(fields: [couponId], references: [id])
+  lmsQueueItems LmsQueue[]
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt
 }
@@ -121,7 +133,19 @@ model Coupon {
   totalRevenue Float    @default(0)
   
   orders       Order[]
+  allowedProductIds String[]
   
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
+}
+
+model LmsQueue {
+  id        String    @id @default(cuid())
+  orderId   String    @unique
+  status    LmsStatus @default(PENDING) // PENDING, SUCCESS, FAILED
+  attempts  Int       @default(0)
+  error     String?   @db.Text
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  order     Order     @relation(fields: [orderId], references: [id], onDelete: Cascade)
 }

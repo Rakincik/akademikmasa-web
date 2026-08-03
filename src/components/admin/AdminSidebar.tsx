@@ -1,8 +1,9 @@
 "use client";
 
-import { LayoutDashboard, Users, BookOpen, ShoppingCart, Settings, LogOut, Folder, Tag, Megaphone } from "lucide-react";
+import { LayoutDashboard, Users, BookOpen, ShoppingCart, Settings, LogOut, Folder, Tag, Megaphone, Globe } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { signOut } from "next-auth/react";
 
 export default function AdminSidebar() {
   const pathname = usePathname();
@@ -56,11 +57,21 @@ export default function AdminSidebar() {
         </nav>
       </div>
 
-      <div className="p-4 border-t border-slate-800">
-        <Link href="/" className="flex items-center gap-3 px-3 py-3 w-full rounded-lg text-slate-400 hover:bg-slate-800 hover:text-white font-medium transition-colors">
-          <LogOut className="w-5 h-5" />
+      <div className="p-4 border-t border-slate-800 flex flex-col gap-1">
+        <Link 
+          href="/" 
+          className="flex items-center gap-3 px-3 py-2.5 w-full rounded-lg text-slate-400 hover:bg-slate-800 hover:text-white font-medium transition-colors"
+        >
+          <Globe className="w-5 h-5" />
           <span>Siteye Dön</span>
         </Link>
+        <button
+          onClick={() => signOut({ callbackUrl: "/" })}
+          className="flex items-center gap-3 px-3 py-2.5 w-full rounded-lg text-red-400 hover:bg-red-950/20 hover:text-red-300 font-medium transition-colors text-left"
+        >
+          <LogOut className="w-5 h-5 text-red-500/80" />
+          <span>Çıkış Yap</span>
+        </button>
       </div>
     </aside>
   );

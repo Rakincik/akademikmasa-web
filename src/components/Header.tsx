@@ -4,8 +4,10 @@ import Link from "next/link";
 import { useCart } from "../context/CartContext";
 import { useEffect, useState } from "react";
 import { Menu, X } from "lucide-react";
+import { useSession } from "next-auth/react";
 
 export default function Header() {
+  const { data: session } = useSession();
   const { totalItems } = useCart();
   const [mounted, setMounted] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -16,7 +18,7 @@ export default function Header() {
   }, []);
 
   return (
-    <header className="sticky top-0 z-50 glass border-b border-slate-200">
+    <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-slate-200">
       <div className="container mx-auto px-4 h-20 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Link href="/">
@@ -29,6 +31,8 @@ export default function Header() {
           <Link href="/hakkimizda" className="hover:text-brand-500 transition-colors">Hakkımızda</Link>
           <Link href="/kadromuz" className="hover:text-brand-500 transition-colors">Kadromuz</Link>
           <Link href="/iletisim" className="hover:text-brand-500 transition-colors">İletişim</Link>
+          <Link href="https://www.youtube.com/@akademikmasa" target="_blank" rel="noopener noreferrer" className="bg-slate-800 hover:bg-slate-900 text-white py-2 rounded-xl font-bold transition-all hover:-translate-y-0.5 shadow-md hover:shadow-slate-800/30 text-sm text-center w-36 flex items-center justify-center shrink-0">Örnek Dersler</Link>
+          <Link href="https://akm.muro.click/admin/dashboard" target="_blank" rel="noopener noreferrer" className="bg-brand-600 hover:bg-brand-700 text-white py-2 rounded-xl font-bold transition-all hover:-translate-y-0.5 shadow-md hover:shadow-brand-600/30 text-sm text-center w-36 flex items-center justify-center shrink-0">Ders Paneli</Link>
         </nav>
         <div className="flex items-center gap-2 md:gap-4">
           <Link href="/sepet" className="relative p-2 text-slate-600 hover:text-brand-600 transition-colors group">
@@ -40,12 +44,26 @@ export default function Header() {
             )}
           </Link>
           <div className="w-px h-6 bg-slate-200 hidden md:block mx-1"></div>
-          <Link href="/auth/login" className="text-slate-600 hover:text-brand-600 font-bold hidden md:block transition-colors">
-            Giriş Yap
-          </Link>
-          <Link href="/auth/register" className="bg-brand-600 hover:bg-brand-700 text-white px-4 sm:px-6 py-2 sm:py-2.5 rounded-xl font-bold transition-all hover:-translate-y-0.5 shadow-md hover:shadow-brand-600/30 ml-1 sm:ml-2 text-sm sm:text-base">
-            Kayıt Ol
-          </Link>
+          {session ? (
+            <Link href={(session?.user as any)?.role === "ADMIN" ? "/admin" : "/panel"} className="flex items-center gap-3 ml-2 group">
+              <div className="w-10 h-10 rounded-full bg-brand-600 text-white flex items-center justify-center font-bold text-sm shadow-md group-hover:scale-105 transition-transform">
+                {session.user.name?.[0]?.toUpperCase() || "U"}
+              </div>
+              <div className="flex flex-col hidden sm:flex">
+                <span className="font-bold text-sm text-slate-800 leading-tight group-hover:text-brand-600 transition-colors">{session.user.name}</span>
+                <span className="font-medium text-xs text-slate-500 leading-tight">{(session?.user as any)?.role === "ADMIN" ? "Yönetici" : "Öğrenci"}</span>
+              </div>
+            </Link>
+          ) : (
+            <>
+              <Link href="/auth/login" className="text-slate-600 hover:text-brand-600 font-bold hidden md:block transition-colors">
+                Giriş Yap
+              </Link>
+              <Link href="/auth/register" className="bg-brand-600 hover:bg-brand-700 text-white px-4 sm:px-6 py-2 sm:py-2.5 rounded-xl font-bold transition-all hover:-translate-y-0.5 shadow-md hover:shadow-brand-600/30 ml-1 sm:ml-2 text-sm sm:text-base">
+                Kayıt Ol
+              </Link>
+            </>
+          )}
           
           <button 
             className="md:hidden p-2 text-slate-600 hover:text-brand-600 transition-colors ml-1"
@@ -65,8 +83,25 @@ export default function Header() {
             <Link href="/hakkimizda" onClick={() => setIsMobileMenuOpen(false)} className="hover:text-brand-500 transition-colors p-2 rounded-lg hover:bg-slate-50">Hakkımızda</Link>
             <Link href="/kadromuz" onClick={() => setIsMobileMenuOpen(false)} className="hover:text-brand-500 transition-colors p-2 rounded-lg hover:bg-slate-50">Kadromuz</Link>
             <Link href="/iletisim" onClick={() => setIsMobileMenuOpen(false)} className="hover:text-brand-500 transition-colors p-2 rounded-lg hover:bg-slate-50">İletişim</Link>
+            <Link href="https://www.youtube.com/@akademikmasa" target="_blank" rel="noopener noreferrer" onClick={() => setIsMobileMenuOpen(false)} className="bg-slate-800 hover:bg-slate-900 text-white px-4 py-2.5 rounded-xl font-bold transition-all text-center mx-2 mt-2 shadow-md">Örnek Dersler</Link>
+            <Link href="https://akm.muro.click/admin/dashboard" target="_blank" rel="noopener noreferrer" className="bg-brand-600 hover:bg-brand-700 text-white px-4 py-2.5 rounded-xl font-bold transition-all text-center mx-2 mt-2 shadow-md">Ders Paneli</Link>
             <div className="h-px bg-slate-100 my-2"></div>
-            <Link href="/auth/login" onClick={() => setIsMobileMenuOpen(false)} className="text-slate-900 font-bold p-2 hover:text-brand-600 transition-colors">Giriş Yap</Link>
+            {session ? (
+              <Link href={(session?.user as any)?.role === "ADMIN" ? "/admin" : "/panel"} onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-3 p-3 bg-slate-50 rounded-xl mx-2 border border-slate-100">
+                <div className="w-10 h-10 rounded-full bg-brand-600 text-white flex items-center justify-center font-bold text-sm shadow-sm">
+                  {session.user.name?.[0]?.toUpperCase() || "U"}
+                </div>
+                <div className="flex flex-col">
+                  <span className="font-bold text-sm text-slate-800 leading-tight">{session.user.name}</span>
+                  <span className="font-medium text-xs text-slate-500 leading-tight">{(session?.user as any)?.role === "ADMIN" ? "Yönetici" : "Öğrenci"}</span>
+                </div>
+              </Link>
+            ) : (
+              <div className="flex flex-col gap-2 px-2">
+                <Link href="/auth/login" onClick={() => setIsMobileMenuOpen(false)} className="text-slate-900 font-bold p-3 text-center border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors">Giriş Yap</Link>
+                <Link href="/auth/register" onClick={() => setIsMobileMenuOpen(false)} className="bg-brand-600 text-white font-bold p-3 text-center rounded-xl shadow-md hover:bg-brand-700 transition-colors">Kayıt Ol</Link>
+              </div>
+            )}
           </nav>
         </div>
       )}

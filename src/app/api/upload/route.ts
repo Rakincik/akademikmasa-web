@@ -23,7 +23,7 @@ export async function POST(req: Request) {
     
     await writeFile(filePath, buffer);
 
-    const publicUrl = `/uploads/${uniqueName}`;
+    const publicUrl = `/api/uploads/${uniqueName}`;
 
     return NextResponse.json({ url: publicUrl });
   } catch (error) {
