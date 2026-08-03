@@ -46,9 +46,10 @@ export async function validateCoupon(code: string) {
 
 export async function getRecommendedProducts() {
   try {
-    const products = await prisma.product.findMany({
+    let products = await prisma.product.findMany({
       where: {
         isPublished: true,
+        showInCrossSell: true,
       },
       include: {
         instructors: true,
@@ -57,6 +58,23 @@ export async function getRecommendedProducts() {
         order: 'asc',
       },
     });
+
+    // Fallback: If no products are explicitly selected for cross-sell, show any active ones
+    if (products.length === 0) {
+      products = await prisma.product.findMany({
+        where: {
+          isPublished: true,
+        },
+        include: {
+          instructors: true,
+        },
+        orderBy: {
+          order: 'asc',
+        },
+        take: 4,
+      });
+    }
+
     return {
       success: true,
       products: products.map(p => ({

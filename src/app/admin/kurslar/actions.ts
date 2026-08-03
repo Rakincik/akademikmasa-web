@@ -22,6 +22,7 @@ export async function saveProduct(data: any) {
     features,
     pricingFeatures,
     isPublished,
+    showInCrossSell,
     instructorIds,
     categoryIds = [], // default to empty array
     lmsCourseId
@@ -57,6 +58,7 @@ export async function saveProduct(data: any) {
     features,
     pricingFeatures,
     isPublished,
+    showInCrossSell: Boolean(showInCrossSell),
     lmsCourseId: lmsCourseId || null,
   };
 

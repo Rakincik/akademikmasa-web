@@ -57,6 +57,7 @@ export default function ProductModal({ isOpen, onClose, instructors, categories,
     reviewCount: "0",
     studentCount: "",
     isPublished: true,
+    showInCrossSell: false,
     lmsCourseId: "",
   });
 
@@ -92,6 +93,7 @@ export default function ProductModal({ isOpen, onClose, instructors, categories,
           reviewCount: initialData.reviewCount?.toString() || "0",
           studentCount: initialData.studentCount || "",
           isPublished: initialData.isPublished,
+          showInCrossSell: initialData.showInCrossSell || false,
           lmsCourseId: initialData.lmsCourseId || "",
         });
         setFeatures(initialData.features || []);
@@ -104,7 +106,7 @@ export default function ProductModal({ isOpen, onClose, instructors, categories,
         // Reset
         setFormData({
           id: "", title: "", slug: "", description: "", longDescription: "", price: "", salePrice: "",
-          badge: "", priceBadge: "", rating: "5.0", reviewCount: "0", studentCount: "", isPublished: true, lmsCourseId: "",
+          badge: "", priceBadge: "", rating: "5.0", reviewCount: "0", studentCount: "", isPublished: true, showInCrossSell: false, lmsCourseId: "",
         });
         setFeatures([]);
         setPricingFeatures([]);
@@ -572,10 +574,14 @@ export default function ProductModal({ isOpen, onClose, instructors, categories,
                 </div>
               </div>
               
-              <div className="flex items-center gap-3 pt-4">
+              <div className="flex flex-col gap-4 pt-4 border-t border-slate-100">
                 <label className="flex items-center gap-3 cursor-pointer">
                   <input type="checkbox" checked={formData.isPublished} onChange={e => setFormData({...formData, isPublished: e.target.checked})} className="w-5 h-5 text-brand-600 rounded border-slate-300 focus:ring-brand-500" />
                   <span className="font-medium text-slate-900">Eğitimi Yayına Al (Aktif)</span>
+                </label>
+                <label className="flex items-center gap-3 cursor-pointer">
+                  <input type="checkbox" checked={formData.showInCrossSell} onChange={e => setFormData({...formData, showInCrossSell: e.target.checked})} className="w-5 h-5 text-brand-600 rounded border-slate-300 focus:ring-brand-500" />
+                  <span className="font-medium text-slate-900">Çapraz Satışta Göster (Öneri Listesine Ekle)</span>
                 </label>
               </div>
             </div>
