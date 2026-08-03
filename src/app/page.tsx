@@ -244,10 +244,43 @@ export default async function Home() {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
             
-            {/* Türkiye 3.sü */}
+            {/* Türkiye 1.si */}
             <div className="group bg-white border border-slate-200 shadow-sm p-8 rounded-[2rem] hover:shadow-xl hover:shadow-brand-500/5 hover:border-brand-200 transition-all duration-500 relative overflow-hidden flex flex-col justify-between min-h-[320px]">
+              <div className="absolute -top-10 -left-10 text-[10rem] font-black text-slate-900/[0.03] group-hover:text-brand-600/15 transition-colors pointer-events-none select-none">1</div>
+              <div>
+                <div className="inline-flex items-center gap-2 px-4 py-2 bg-brand-50/50 border border-brand-100 rounded-2xl mb-8">
+                  <Medal className="w-5 h-5 text-brand-600" />
+                  <span className="text-brand-700 font-black tracking-tight text-lg">Türkiye 1.si</span>
+                </div>
+                <div className="flex items-center gap-4 mb-6">
+                  <div className="w-14 h-14 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-800 font-black text-xl shrink-0">
+                    İK
+                  </div>
+                  <div>
+                    <h4 className="text-slate-900 font-bold text-lg">İbrahim Kocakaya</h4>
+                    <p className="text-slate-500 text-sm font-medium">Türkçe ÖABT</p>
+                  </div>
+                </div>
+                <p className="text-slate-700 font-medium leading-relaxed italic relative z-10 text-lg mb-6 mt-4">
+                  "Akademik Masa ile zirveye"
+                </p>
+                {/* Sonuç Belgesi Fotoğrafı */}
+                <div className="w-full h-28 rounded-xl border border-slate-200 overflow-hidden relative group/doc cursor-pointer mt-auto">
+                  <div className="absolute inset-0 bg-slate-900/40 opacity-0 group-hover/doc:opacity-100 transition-opacity flex items-center justify-center z-10 backdrop-blur-[2px]">
+                    <span className="text-white text-xs font-bold bg-white/20 px-3 py-1.5 rounded-lg backdrop-blur-md border border-white/30 shadow-sm">Belgeyi Gör</span>
+                  </div>
+                  <img src="https://images.unsplash.com/photo-1586281380349-632531db7ed4?q=80&w=2070&auto=format&fit=crop" alt="Sınav Sonucu" className="w-full h-full object-cover opacity-70 group-hover/doc:opacity-100 group-hover/doc:scale-105 transition-all duration-500" />
+                  <div className="absolute top-2 left-2 bg-white/95 backdrop-blur-sm px-2 py-1 rounded text-[10px] font-bold text-slate-700 border border-slate-200 flex items-center gap-1 shadow-sm">
+                    <FileText className="w-3 h-3 text-brand-600" /> ÖSYM Sonuç Belgesi
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Türkiye 3.sü */}
+            <div className="group bg-white border border-slate-200 shadow-sm p-8 rounded-[2rem] hover:shadow-xl hover:shadow-brand-500/5 hover:border-brand-200 transition-all duration-500 relative overflow-hidden flex flex-col justify-between min-h-[320px] lg:translate-y-8">
               <div className="absolute -top-10 -left-10 text-[10rem] font-black text-slate-900/[0.03] group-hover:text-brand-600/15 transition-colors pointer-events-none select-none">3</div>
               <div>
                 <div className="inline-flex items-center gap-2 px-4 py-2 bg-brand-50/50 border border-brand-100 rounded-2xl mb-8">
@@ -280,7 +313,7 @@ export default async function Home() {
             </div>
 
             {/* Türkiye 5.si */}
-            <div className="group bg-white border border-slate-200 shadow-sm p-8 rounded-[2rem] hover:shadow-xl hover:shadow-brand-500/5 hover:border-brand-200 transition-all duration-500 relative overflow-hidden flex flex-col justify-between min-h-[320px] lg:translate-y-8">
+            <div className="group bg-white border border-slate-200 shadow-sm p-8 rounded-[2rem] hover:shadow-xl hover:shadow-brand-500/5 hover:border-brand-200 transition-all duration-500 relative overflow-hidden flex flex-col justify-between min-h-[320px]">
               <div className="absolute -top-10 -left-10 text-[10rem] font-black text-slate-900/[0.03] group-hover:text-brand-600/15 transition-colors pointer-events-none select-none">5</div>
               <div>
                 <div className="inline-flex items-center gap-2 px-4 py-2 bg-brand-50/50 border border-brand-100 rounded-2xl mb-8">
@@ -313,7 +346,7 @@ export default async function Home() {
             </div>
 
             {/* Türkiye 7.si */}
-            <div className="group bg-white border border-slate-200 shadow-sm p-8 rounded-[2rem] hover:shadow-xl hover:shadow-brand-500/5 hover:border-brand-200 transition-all duration-500 relative overflow-hidden flex flex-col justify-between min-h-[320px]">
+            <div className="group bg-white border border-slate-200 shadow-sm p-8 rounded-[2rem] hover:shadow-xl hover:shadow-brand-500/5 hover:border-brand-200 transition-all duration-500 relative overflow-hidden flex flex-col justify-between min-h-[320px] lg:translate-y-8">
               <div className="absolute -top-10 -left-10 text-[10rem] font-black text-slate-900/[0.03] group-hover:text-brand-600/15 transition-colors pointer-events-none select-none">7</div>
               <div>
                 <div className="inline-flex items-center gap-2 px-4 py-2 bg-brand-50/50 border border-brand-100 rounded-2xl mb-8">
@@ -346,7 +379,7 @@ export default async function Home() {
             </div>
 
             {/* Türkiye 9.su */}
-            <div className="group bg-white border border-slate-200 shadow-sm p-8 rounded-[2rem] hover:shadow-xl hover:shadow-brand-500/5 hover:border-brand-200 transition-all duration-500 relative overflow-hidden flex flex-col justify-between min-h-[320px] lg:translate-y-8">
+            <div className="group bg-white border border-slate-200 shadow-sm p-8 rounded-[2rem] hover:shadow-xl hover:shadow-brand-500/5 hover:border-brand-200 transition-all duration-500 relative overflow-hidden flex flex-col justify-between min-h-[320px]">
               <div className="absolute -top-10 -left-10 text-[10rem] font-black text-slate-900/[0.03] group-hover:text-brand-600/15 transition-colors pointer-events-none select-none">9</div>
               <div>
                 <div className="inline-flex items-center gap-2 px-4 py-2 bg-brand-50/50 border border-brand-100 rounded-2xl mb-8">
