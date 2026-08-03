@@ -197,6 +197,7 @@ export default function KurslarClient({ products, instructors, categories }: { p
         initialData={editingProduct}
         instructors={instructors}
         categories={categories}
+        products={productList}
       />
       
       <DeleteConfirmModal

@@ -44,12 +44,31 @@ export async function validateCoupon(code: string) {
   };
 }
 
-export async function getRecommendedProducts() {
+export async function getRecommendedProducts(cartProductIds: string[] = []) {
   try {
+    // 1. Get the recommendationIds from the products currently in the cart
+    const cartProducts = await prisma.product.findMany({
+      where: {
+        id: { in: cartProductIds },
+      },
+      select: {
+        recommendationIds: true,
+      },
+    });
+
+    // 2. Gather all recommendationIds, remove duplicates
+    const recommendedIds = Array.from(
+      new Set(cartProducts.flatMap(p => p.recommendationIds || []))
+    );
+
+    // 3. Filter out items that are already in the cart
+    const filteredRecommendedIds = recommendedIds.filter(id => !cartProductIds.includes(id));
+
+    // 4. Fetch the recommended products from the database
     let products = await prisma.product.findMany({
       where: {
+        id: { in: filteredRecommendedIds },
         isPublished: true,
-        showInCrossSell: true,
       },
       include: {
         instructors: true,
@@ -59,11 +78,12 @@ export async function getRecommendedProducts() {
       },
     });
 
-    // Fallback: If no products are explicitly selected for cross-sell, show any active ones
+    // Fallback: If no products are explicitly selected for cross-sell (or all of them are already in the cart), show general active ones
     if (products.length === 0) {
       products = await prisma.product.findMany({
         where: {
           isPublished: true,
+          id: { notIn: cartProductIds }, // don't recommend what is already in the cart
         },
         include: {
           instructors: true,

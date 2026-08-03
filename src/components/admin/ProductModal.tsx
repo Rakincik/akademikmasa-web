@@ -35,10 +35,11 @@ interface ProductModalProps {
   onClose: () => void;
   instructors: Instructor[];
   categories: Category[];
+  products?: any[];
   initialData?: any;
 }
 
-export default function ProductModal({ isOpen, onClose, instructors, categories, initialData }: ProductModalProps) {
+export default function ProductModal({ isOpen, onClose, instructors, categories, products = [], initialData }: ProductModalProps) {
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
@@ -57,9 +58,11 @@ export default function ProductModal({ isOpen, onClose, instructors, categories,
     reviewCount: "0",
     studentCount: "",
     isPublished: true,
-    showInCrossSell: false,
     lmsCourseId: "",
   });
+
+  const [recommendationIds, setRecommendationIds] = useState<string[]>([]);
+  const [isRecommendationDropdownOpen, setIsRecommendationDropdownOpen] = useState(false);
 
   const [features, setFeatures] = useState<string[]>([]);
   const [pricingFeatures, setPricingFeatures] = useState<string[]>([]);
@@ -93,25 +96,26 @@ export default function ProductModal({ isOpen, onClose, instructors, categories,
           reviewCount: initialData.reviewCount?.toString() || "0",
           studentCount: initialData.studentCount || "",
           isPublished: initialData.isPublished,
-          showInCrossSell: initialData.showInCrossSell || false,
           lmsCourseId: initialData.lmsCourseId || "",
         });
         setFeatures(initialData.features || []);
         setPricingFeatures(initialData.pricingFeatures || []);
         setInstructorIds(initialData.instructors?.map((i: any) => i.id) || []);
         setCategoryIds(initialData.categories?.map((c: any) => c.id) || []);
+        setRecommendationIds(initialData.recommendationIds || []);
         setPreview(initialData.imageUrl || null);
         setGalleryUrls(initialData.images || []);
       } else {
         // Reset
         setFormData({
           id: "", title: "", slug: "", description: "", longDescription: "", price: "", salePrice: "",
-          badge: "", priceBadge: "", rating: "5.0", reviewCount: "0", studentCount: "", isPublished: true, showInCrossSell: false, lmsCourseId: "",
+          badge: "", priceBadge: "", rating: "5.0", reviewCount: "0", studentCount: "", isPublished: true, lmsCourseId: "",
         });
         setFeatures([]);
         setPricingFeatures([]);
         setInstructorIds([]);
         setCategoryIds([]);
+        setRecommendationIds([]);
         setFile(null);
         setPreview(null);
         setGalleryUrls([]);
@@ -247,7 +251,8 @@ export default function ProductModal({ isOpen, onClose, instructors, categories,
         features,
         pricingFeatures,
         instructorIds,
-        categoryIds
+        categoryIds,
+        recommendationIds
       });
 
       onClose();
@@ -531,6 +536,65 @@ export default function ProductModal({ isOpen, onClose, instructors, categories,
                   )}
                 </div>
               </div>
+
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-3">Çapraz Satış Önerileri (Bu ürün sepete eklendiğinde tavsiye edilecek diğer eğitimler)</label>
+                <div className="relative">
+                  <div 
+                    className="w-full px-4 py-2 rounded-xl border border-slate-200 focus-within:ring-2 focus-within:ring-brand-500/20 focus-within:border-brand-500 outline-none bg-white flex flex-wrap gap-2 items-center cursor-pointer min-h-[50px]"
+                    onClick={() => setIsRecommendationDropdownOpen(!isRecommendationDropdownOpen)}
+                  >
+                    {recommendationIds.length === 0 ? (
+                      <span className="text-slate-400 text-sm">Önerilecek Eğitim Seçiniz...</span>
+                    ) : (
+                      recommendationIds.map(id => {
+                        const prod = products?.find((p: any) => p.id === id);
+                        return (
+                          <span key={id} className="bg-brand-50 text-brand-600 px-3 py-1.5 rounded-lg text-sm font-medium flex items-center gap-2">
+                            {prod?.title}
+                            <X 
+                              className="w-3 h-3 cursor-pointer hover:text-brand-800" 
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setRecommendationIds(prev => prev.filter(rId => rId !== id));
+                              }} 
+                            />
+                          </span>
+                        );
+                      })
+                    )}
+                  </div>
+                  
+                  {isRecommendationDropdownOpen && (
+                    <>
+                      <div className="fixed inset-0 z-10" onClick={() => setIsRecommendationDropdownOpen(false)}></div>
+                      <div className="relative z-20 mt-2 bg-white border border-slate-200 rounded-xl shadow-lg max-h-60 overflow-y-auto p-2">
+                        {products?.filter((p: any) => p.id !== formData.id).map((prod: any) => (
+                          <label 
+                            key={prod.id} 
+                            className="flex items-center gap-3 p-3 hover:bg-slate-50 rounded-lg cursor-pointer transition-colors"
+                          >
+                            <div className={`w-5 h-5 rounded flex items-center justify-center border transition-colors ${recommendationIds.includes(prod.id) ? 'bg-brand-500 border-brand-500' : 'border-slate-300'}`}>
+                              {recommendationIds.includes(prod.id) && <CheckCircle className="w-3.5 h-3.5 text-white" />}
+                            </div>
+                            <span className={`font-medium ${recommendationIds.includes(prod.id) ? 'text-brand-700' : 'text-slate-700'}`}>{prod.title}</span>
+                            <input 
+                              type="checkbox" 
+                              className="hidden"
+                              checked={recommendationIds.includes(prod.id)}
+                              onChange={() => {
+                                setRecommendationIds(prev => 
+                                  prev.includes(prod.id) ? prev.filter(id => id !== prod.id) : [...prev, prod.id]
+                                );
+                              }}
+                            />
+                          </label>
+                        ))}
+                      </div>
+                    </>
+                  )}
+                </div>
+              </div>
             </div>
           )}
 
@@ -574,14 +638,10 @@ export default function ProductModal({ isOpen, onClose, instructors, categories,
                 </div>
               </div>
               
-              <div className="flex flex-col gap-4 pt-4 border-t border-slate-100">
+              <div className="flex items-center gap-3 pt-4">
                 <label className="flex items-center gap-3 cursor-pointer">
                   <input type="checkbox" checked={formData.isPublished} onChange={e => setFormData({...formData, isPublished: e.target.checked})} className="w-5 h-5 text-brand-600 rounded border-slate-300 focus:ring-brand-500" />
                   <span className="font-medium text-slate-900">Eğitimi Yayına Al (Aktif)</span>
-                </label>
-                <label className="flex items-center gap-3 cursor-pointer">
-                  <input type="checkbox" checked={formData.showInCrossSell} onChange={e => setFormData({...formData, showInCrossSell: e.target.checked})} className="w-5 h-5 text-brand-600 rounded border-slate-300 focus:ring-brand-500" />
-                  <span className="font-medium text-slate-900">Çapraz Satışta Göster (Öneri Listesine Ekle)</span>
                 </label>
               </div>
             </div>

@@ -13,13 +13,14 @@ export default function CartPage() {
 
   useEffect(() => {
     const fetchRecommendations = async () => {
-      const res = await getRecommendedProducts();
+      const productIds = items.map(item => item.id);
+      const res = await getRecommendedProducts(productIds);
       if (res.success) {
         setAllProducts(res.products);
       }
     };
     fetchRecommendations();
-  }, []);
+  }, [items]);
   const [activeCoupon, setActiveCoupon] = useState<{code: string, discountType: string, discountValue: number, allowedProductIds: string[]} | null>(null);
   const [isChecking, setIsChecking] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);

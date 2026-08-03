@@ -50,7 +50,7 @@ model Product {
   features        String[]     // For "Neler Kazanacaksınız?"
   pricingFeatures String[]     // For pricing box features
   isPublished     Boolean      @default(true)
-  showInCrossSell Boolean      @default(false)
+  recommendationIds String[]
   order           Int          @default(0)
   lmsCourseId     String?      // MURO LMS tarafındaki Paket/Kurs kodu
   
