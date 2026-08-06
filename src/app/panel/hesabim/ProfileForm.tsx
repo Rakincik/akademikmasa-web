@@ -24,7 +24,7 @@ const formatPhone = (val: string) => {
 export default function ProfileForm({ 
   user 
 }: { 
-  user: { name: string, email: string, phone: string, tc: string } 
+  user: { name: string, email: string, phone: string, tc: string, address: string } 
 }) {
   const router = useRouter();
   const nameParts = user.name.split(" ");
@@ -35,6 +35,7 @@ export default function ProfileForm({
   const [lastName, setLastName] = useState(initialLastName);
   const [tc, setTc] = useState(user.tc || "");
   const [phone, setPhone] = useState(formatPhone(user.phone || ""));
+  const [address, setAddress] = useState(user.address || "");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -50,6 +51,7 @@ export default function ProfileForm({
       name: `${firstName.trim()} ${lastName.trim()}`.trim(),
       tc: tc.trim(),
       phone,
+      address: address.trim(),
       password: password.trim() !== "" ? password : undefined
     });
 
@@ -160,6 +162,20 @@ export default function ProfileForm({
             onChange={(e) => setPassword(e.target.value)}
             className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-colors font-medium text-slate-900 placeholder:text-slate-400" 
             placeholder="Değiştirmek istemiyorsanız boş bırakın"
+          />
+        </div>
+
+        <div className="col-span-1 sm:col-span-2">
+          <label htmlFor="address" className="block text-sm font-bold text-slate-700 mb-2">
+            Açık Adres (Eğitim kitapçıkları gönderimleri için)
+          </label>
+          <textarea 
+            id="address" 
+            rows={3}
+            value={address}
+            onChange={(e) => setAddress(e.target.value)}
+            className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-colors font-medium text-slate-900 placeholder:text-slate-400 resize-none text-sm" 
+            placeholder="Kitap ve basılı materyal gönderimi için açık adresinizi detaylı olarak yazın."
           />
         </div>
       </div>

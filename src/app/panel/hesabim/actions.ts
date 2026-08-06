@@ -4,7 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { auth } from "@/auth";
 import { revalidatePath } from "next/cache";
 
-export async function updateProfile(data: { name: string; tc?: string; phone: string; password?: string }) {
+export async function updateProfile(data: { name: string; tc?: string; phone: string; password?: string; address?: string }) {
   try {
     const session = await auth();
     if (!session?.user?.id) {
@@ -15,6 +15,7 @@ export async function updateProfile(data: { name: string; tc?: string; phone: st
       name: data.name,
       phone: data.phone,
       tc: data.tc || null,
+      address: data.address || null,
     };
 
     if (data.password && data.password.trim() !== "") {

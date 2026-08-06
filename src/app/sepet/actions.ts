@@ -2,7 +2,7 @@
 
 import { prisma } from "@/lib/prisma";
 
-export async function validateCoupon(code: string) {
+export async function validateCoupon(code: string, userEmail?: string, cartSubtotal?: number) {
   if (!code) {
     return { success: false, message: "Lütfen bir kupon kodu girin." };
   }
@@ -31,6 +31,48 @@ export async function validateCoupon(code: string) {
 
   if (coupon.usageLimit && coupon.usedCount >= coupon.usageLimit) {
     return { success: false, message: "Bu kuponun kullanım sınırı dolmuş." };
+  }
+
+  // Check minimum cart amount condition
+  if (coupon.minOrderAmount && cartSubtotal !== undefined && cartSubtotal < coupon.minOrderAmount) {
+    return { 
+      success: false, 
+      message: `Bu kupon kodu en az ${coupon.minOrderAmount.toLocaleString("tr-TR")} ₺ tutarındaki siparişlerde geçerlidir.` 
+    };
+  }
+
+  // Check allowed specific user emails condition
+  if (coupon.allowedUserEmails && coupon.allowedUserEmails.length > 0) {
+    if (!userEmail || !coupon.allowedUserEmails.some(email => email.toLowerCase() === userEmail.toLowerCase())) {
+      return { 
+        success: false, 
+        message: "Bu özel kupon kodu adınıza veya e-posta adresinize tanımlı değil." 
+      };
+    }
+  }
+
+  // Check previous buyers (loyalty coupon) condition
+  if (coupon.onlyPreviousBuyers) {
+    if (!userEmail) {
+      return { 
+        success: false, 
+        message: "Bu sadakat kuponunu kullanabilmek için lütfen giriş yapın." 
+      };
+    }
+
+    const previousOrder = await prisma.order.findFirst({
+      where: {
+        user: { email: userEmail.toLowerCase() },
+        status: "COMPLETED"
+      }
+    });
+
+    if (!previousOrder) {
+      return { 
+        success: false, 
+        message: "Bu özel indirim kuponu yalnızca daha önce eğitim satın almış öğrencilerimize özeldir." 
+      };
+    }
   }
 
   return { 

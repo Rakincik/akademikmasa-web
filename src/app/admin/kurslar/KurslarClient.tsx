@@ -48,7 +48,6 @@ export default function KurslarClient({ products, instructors, categories }: { p
   // --- Drag and Drop Handlers ---
   const handleDragStart = (e: React.DragEvent<HTMLTableRowElement>, position: number) => {
     dragItem.current = position;
-    // Küçük bir görsel ayar (opsiyonel)
     if (e.dataTransfer) {
       e.dataTransfer.effectAllowed = "move";
     }
@@ -58,7 +57,6 @@ export default function KurslarClient({ products, instructors, categories }: { p
     e.preventDefault();
     dragOverItem.current = position;
     
-    // Görsel olarak anında yer değiştirme
     const listCopy = [...productList];
     const draggedItemContent = listCopy[dragItem.current as number];
     listCopy.splice(dragItem.current as number, 1);
@@ -72,30 +70,34 @@ export default function KurslarClient({ products, instructors, categories }: { p
     dragItem.current = null;
     dragOverItem.current = null;
     
-    // Veritabanına kaydet
     const orderedIds = productList.map(p => p.id);
     await updateProductOrder(orderedIds);
   };
 
   const handleDragOver = (e: React.DragEvent<HTMLTableRowElement>) => {
-    e.preventDefault(); // Drop işlemine izin vermek için gerekli
+    e.preventDefault();
   };
 
   return (
     <div className="space-y-8">
-      <div className="flex items-center justify-between">
+      {/* Responsive Header Block */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-slate-900">Eğitimler ve Ürünler</h1>
-          <p className="text-slate-500">Sistemdeki tüm eğitim paketlerini sürükleyip bırakarak (Grip ikonundan) sıralayabilirsiniz.</p>
+          <p className="text-slate-500 text-sm mt-1">Sistemdeki tüm eğitim paketlerini sürükleyip bırakarak (Grip ikonundan) sıralayabilirsiniz.</p>
         </div>
         
-        <button onClick={handleAddNew} className="bg-brand-600 hover:bg-brand-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 text-sm font-medium transition-colors">
+        <button 
+          onClick={handleAddNew} 
+          className="w-full sm:w-auto bg-brand-600 hover:bg-brand-700 text-white px-5 py-2.5 rounded-xl flex items-center justify-center gap-2 text-sm font-bold shadow-md hover:shadow-brand-600/30 transition-all cursor-pointer shrink-0"
+        >
           <Plus className="w-5 h-5" />
           <span>Yeni Eğitim Ekle</span>
         </button>
       </div>
 
-      <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+      {/* Desktop View: Table Layout (visible on md screens and above) */}
+      <div className="hidden md:block bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-sm">
             <thead className="bg-slate-50 text-slate-500 font-medium border-b border-slate-100">
@@ -177,7 +179,7 @@ export default function KurslarClient({ products, instructors, categories }: { p
                         </button>
                         <button 
                           onPointerDown={(e) => { e.stopPropagation(); handleDelete(product.id); }} 
-                          className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
+                          className="p-2 text-slate-400 hover:text-red-650 hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
                         >
                           <Trash2 className="w-4 h-4" />
                         </button>
@@ -189,6 +191,70 @@ export default function KurslarClient({ products, instructors, categories }: { p
             </tbody>
           </table>
         </div>
+      </div>
+
+      {/* Mobile View: Premium Cards List (visible on mobile only) */}
+      <div className="grid grid-cols-1 gap-4 md:hidden">
+        {productList.length === 0 ? (
+          <div className="bg-white p-8 text-center text-slate-400 border border-slate-100 rounded-2xl shadow-xs">
+            Henüz kayıtlı eğitim bulunmuyor.
+          </div>
+        ) : (
+          productList.map((product) => (
+            <div key={product.id} className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm flex flex-col gap-3">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 rounded-xl bg-slate-100 border border-slate-200 overflow-hidden flex-shrink-0 flex items-center justify-center">
+                  {product.imageUrl ? (
+                    <img src={product.imageUrl} alt="" className="w-full h-full object-cover" />
+                  ) : (
+                    <span className="text-slate-400 text-[10px]">Yok</span>
+                  )}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <h4 className="font-bold text-slate-900 text-sm leading-tight truncate">{product.title}</h4>
+                  {product.badge && (
+                    <span className="text-[10px] bg-brand-50 text-brand-700 px-2 py-0.5 rounded-md font-bold inline-block mt-1">
+                      {product.badge}
+                    </span>
+                  )}
+                </div>
+                <span className={`px-2 py-0.5 rounded-md text-[10px] font-bold ${product.isPublished ? 'bg-emerald-50 text-emerald-700 border border-emerald-100' : 'bg-amber-50 text-amber-700 border border-amber-100'}`}>
+                  {product.isPublished ? 'Yayında' : 'Taslak'}
+                </span>
+              </div>
+              
+              <div className="flex items-center justify-between border-t border-slate-50 pt-3 text-xs">
+                <div>
+                  <p className="text-[9px] text-slate-400 uppercase font-bold">Fiyat</p>
+                  <div className="flex items-center gap-1.5 mt-0.5">
+                    {product.salePrice ? (
+                      <>
+                        <span className="font-extrabold text-slate-900">{product.salePrice} ₺</span>
+                        <span className="text-[10px] text-slate-400 line-through font-normal">{product.price} ₺</span>
+                      </>
+                    ) : (
+                      <span className="font-extrabold text-slate-900">{product.price} ₺</span>
+                    )}
+                  </div>
+                </div>
+                <div className="flex items-center gap-1">
+                  <button 
+                    onClick={() => handleEdit(product)} 
+                    className="p-2 text-slate-400 hover:text-blue-650 hover:bg-blue-50 rounded-lg transition-colors cursor-pointer"
+                  >
+                    <Edit className="w-4.5 h-4.5" />
+                  </button>
+                  <button 
+                    onClick={() => handleDelete(product.id)} 
+                    className="p-2 text-slate-400 hover:text-red-650 hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
+                  >
+                    <Trash2 className="w-4.5 h-4.5" />
+                  </button>
+                </div>
+              </div>
+            </div>
+          ))
+        )}
       </div>
 
       <ProductModal 

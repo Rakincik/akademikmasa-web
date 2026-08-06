@@ -1,13 +1,29 @@
 "use client";
 import { ArrowRight, Search, SlidersHorizontal, ArrowUpDown, CheckCircle2, ChevronRight, Filter, ChevronDown, Star } from "lucide-react";
 import Link from "next/link";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
 
 export default function KurslarClient({ initialProducts, categories }: { initialProducts: any[], categories: any[] }) {
+  const searchParams = useSearchParams();
   const [search, setSearch] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("Tümü");
   const [sort, setSort] = useState("default");
   const [isSortOpen, setIsSortOpen] = useState(false);
+
+  // Sync category filter from URL query param (e.g., ?kategori=oabt-turkce)
+  useEffect(() => {
+    const categoryParam = searchParams.get("kategori") || searchParams.get("category");
+    if (categoryParam) {
+      // Find category by slug or id
+      const matchedCat = categories.find(
+        (c) => c.slug === categoryParam || c.id === categoryParam
+      );
+      if (matchedCat) {
+        setSelectedCategory(matchedCat.id);
+      }
+    }
+  }, [searchParams, categories]);
 
   const filteredCourses = useMemo(() => {
     let result = [...initialProducts];

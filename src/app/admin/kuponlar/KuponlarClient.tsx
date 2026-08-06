@@ -6,7 +6,7 @@ import CouponStatsModal from "@/components/admin/CouponStatsModal";
 import DeleteConfirmModal from "@/components/admin/DeleteConfirmModal";
 import { deleteCoupon } from "./actions";
 
-export default function KuponlarClient({ initialCoupons, isInfluencerMode = false, products = [] }: { initialCoupons: any[], isInfluencerMode?: boolean, products?: any[] }) {
+export default function KuponlarClient({ initialCoupons, isInfluencerMode = false, products = [], users = [] }: { initialCoupons: any[], isInfluencerMode?: boolean, products?: any[], users?: any[] }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingCoupon, setEditingCoupon] = useState<any>(null);
   
@@ -88,8 +88,27 @@ export default function KuponlarClient({ initialCoupons, isInfluencerMode = fals
                 initialCoupons.map((coupon) => (
                   <tr key={coupon.id} className="border-b border-slate-50 hover:bg-slate-50/50 transition-colors group">
                     <td className="p-4 pl-6">
-                      <div className="font-black text-slate-900 bg-slate-100 px-3 py-1 rounded-lg inline-block tracking-wider">
-                        {coupon.code}
+                      <div className="flex flex-col items-start gap-1">
+                        <div className="font-black text-slate-900 bg-slate-100 px-3 py-1 rounded-lg inline-block tracking-wider font-mono text-sm">
+                          {coupon.code}
+                        </div>
+                        <div className="flex flex-wrap gap-1">
+                          {coupon.onlyPreviousBuyers && (
+                            <span className="text-[10px] font-bold bg-emerald-100 text-emerald-800 px-1.5 py-0.5 rounded border border-emerald-200">
+                              Mevcut Kursiyerlere Özel
+                            </span>
+                          )}
+                          {coupon.allowedUserEmails && coupon.allowedUserEmails.length > 0 && (
+                            <span className="text-[10px] font-bold bg-blue-100 text-blue-800 px-1.5 py-0.5 rounded border border-blue-200" title={coupon.allowedUserEmails.join(', ')}>
+                              Kişiye Özel ({coupon.allowedUserEmails.length} Öğrenci)
+                            </span>
+                          )}
+                          {coupon.minOrderAmount && (
+                            <span className="text-[10px] font-bold bg-amber-100 text-amber-800 px-1.5 py-0.5 rounded border border-amber-200">
+                              Min: {coupon.minOrderAmount.toLocaleString('tr-TR')} ₺
+                            </span>
+                          )}
+                        </div>
                       </div>
                     </td>
                     <td className="p-4">
@@ -171,6 +190,7 @@ export default function KuponlarClient({ initialCoupons, isInfluencerMode = fals
         initialData={editingCoupon} 
         isInfluencerMode={isInfluencerMode}
         products={products}
+        users={users}
       />
 
       <CouponStatsModal 

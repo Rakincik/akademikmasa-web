@@ -39,7 +39,8 @@ export default async function HesabimPage() {
             name: user.name,
             tc: (user as any).tc || "",
             email: user.email,
-            phone: user.phone || ""
+            phone: user.phone || "",
+            address: (user as any).address || ""
           }} />
         </div>
       </div>

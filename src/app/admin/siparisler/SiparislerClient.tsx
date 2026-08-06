@@ -1,7 +1,27 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { Eye, CheckCircle, Clock, XCircle, Loader2, ArrowUpDown, ArrowUp, ArrowDown, Search, Filter, X, ShoppingBag, Trash2, Download } from "lucide-react";
+import {
+  Eye,
+  CheckCircle,
+  Clock,
+  XCircle,
+  Loader2,
+  ArrowUpDown,
+  ArrowUp,
+  ArrowDown,
+  Search,
+  Filter,
+  X,
+  ShoppingBag,
+  Trash2,
+  Download,
+  CreditCard,
+  TrendingUp,
+  AlertCircle,
+  Check,
+  MessageCircle,
+} from "lucide-react";
 import { updateOrderStatus, deleteOrders } from "./actions";
 
 type SortColumn = "id" | "user" | "totalAmount" | "status" | "createdAt";
@@ -9,21 +29,41 @@ type SortDirection = "asc" | "desc";
 
 export default function SiparislerClient({ orders }: { orders: any[] }) {
   const [loadingId, setLoadingId] = useState<string | null>(null);
-  
+
   // Sorting State
   const [sortCol, setSortCol] = useState<SortColumn>("createdAt");
   const [sortDir, setSortDir] = useState<SortDirection>("desc");
-  
+
   // Filtering & Search State
-  const [filterStatus, setFilterStatus] = useState<string>("ALL");
+  const [filterStatus, setFilterStatus] = useState<"ALL" | "PENDING" | "COMPLETED" | "FAILED">("ALL");
   const [searchQuery, setSearchQuery] = useState("");
-  
+
   // Modal State
   const [selectedOrder, setSelectedOrder] = useState<any | null>(null);
 
   // Selection State for Deletion
   const [selectedOrders, setSelectedOrders] = useState<string[]>([]);
   const [isDeleting, setIsDeleting] = useState(false);
+
+  // Calculate stats
+  const stats = useMemo(() => {
+    const totalCount = orders.length;
+    const completedOrders = orders.filter((o) => o.status === "COMPLETED");
+    const pendingOrders = orders.filter((o) => o.status === "PENDING");
+    const failedOrders = orders.filter((o) => o.status === "FAILED");
+
+    const totalRevenue = completedOrders.reduce((sum, o) => sum + o.totalAmount, 0);
+    const pendingRevenue = pendingOrders.reduce((sum, o) => sum + o.totalAmount, 0);
+
+    return {
+      totalCount,
+      completedCount: completedOrders.length,
+      pendingCount: pendingOrders.length,
+      failedCount: failedOrders.length,
+      totalRevenue,
+      pendingRevenue,
+    };
+  }, [orders]);
 
   const handleStatusChange = async (orderId: string, newStatus: string) => {
     setLoadingId(orderId);
@@ -47,26 +87,32 @@ export default function SiparislerClient({ orders }: { orders: any[] }) {
   };
 
   const getSortIcon = (col: SortColumn) => {
-    if (sortCol !== col) return <ArrowUpDown className="w-4 h-4 text-slate-300" />;
-    return sortDir === "asc" ? <ArrowUp className="w-4 h-4 text-brand-600" /> : <ArrowDown className="w-4 h-4 text-brand-600" />;
+    if (sortCol !== col) return <ArrowUpDown className="w-3.5 h-3.5 text-slate-300" />;
+    return sortDir === "asc" ? (
+      <ArrowUp className="w-3.5 h-3.5 text-brand-600" />
+    ) : (
+      <ArrowDown className="w-3.5 h-3.5 text-brand-600" />
+    );
   };
 
-  // Process data: filter, search, then sort
+  // Filter & Search & Sort orders
   const filteredAndSortedOrders = useMemo(() => {
     let result = [...orders];
 
-    // Filter by Status
+    // Filter by Status Tab
     if (filterStatus !== "ALL") {
-      result = result.filter(o => o.status === filterStatus);
+      result = result.filter((o) => o.status === filterStatus);
     }
 
-    // Filter by Search (ID, Name, Email)
+    // Filter by Search (ID, Name, Email, Phone)
     if (searchQuery.trim() !== "") {
       const q = searchQuery.toLocaleLowerCase("tr-TR");
-      result = result.filter(o => 
-        o.id.toLocaleLowerCase("tr-TR").includes(q) ||
-        o.user.name.toLocaleLowerCase("tr-TR").includes(q) ||
-        (o.user.email && o.user.email.toLocaleLowerCase("tr-TR").includes(q))
+      result = result.filter(
+        (o) =>
+          o.id.toLocaleLowerCase("tr-TR").includes(q) ||
+          o.user.name.toLocaleLowerCase("tr-TR").includes(q) ||
+          (o.user.email && o.user.email.toLocaleLowerCase("tr-TR").includes(q)) ||
+          (o.user.phone && o.user.phone.includes(q))
       );
     }
 
@@ -76,15 +122,25 @@ export default function SiparislerClient({ orders }: { orders: any[] }) {
 
       switch (sortCol) {
         case "id":
-          aVal = a.id; bVal = b.id; break;
+          aVal = a.id;
+          bVal = b.id;
+          break;
         case "user":
-          aVal = a.user.name.toLowerCase(); bVal = b.user.name.toLowerCase(); break;
+          aVal = a.user.name.toLowerCase();
+          bVal = b.user.name.toLowerCase();
+          break;
         case "totalAmount":
-          aVal = a.totalAmount; bVal = b.totalAmount; break;
+          aVal = a.totalAmount;
+          bVal = b.totalAmount;
+          break;
         case "status":
-          aVal = a.status; bVal = b.status; break;
+          aVal = a.status;
+          bVal = b.status;
+          break;
         case "createdAt":
-          aVal = new Date(a.createdAt).getTime(); bVal = new Date(b.createdAt).getTime(); break;
+          aVal = new Date(a.createdAt).getTime();
+          bVal = new Date(b.createdAt).getTime();
+          break;
       }
 
       if (aVal < bVal) return sortDir === "asc" ? -1 : 1;
@@ -97,7 +153,7 @@ export default function SiparislerClient({ orders }: { orders: any[] }) {
 
   const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.checked) {
-      setSelectedOrders(filteredAndSortedOrders.map(o => o.id));
+      setSelectedOrders(filteredAndSortedOrders.map((o) => o.id));
     } else {
       setSelectedOrders([]);
     }
@@ -105,7 +161,7 @@ export default function SiparislerClient({ orders }: { orders: any[] }) {
 
   const handleSelectOrder = (id: string) => {
     if (selectedOrders.includes(id)) {
-      setSelectedOrders(selectedOrders.filter(orderId => orderId !== id));
+      setSelectedOrders(selectedOrders.filter((orderId) => orderId !== id));
     } else {
       setSelectedOrders([...selectedOrders, id]);
     }
@@ -113,8 +169,13 @@ export default function SiparislerClient({ orders }: { orders: any[] }) {
 
   const handleDeleteSelected = async () => {
     if (selectedOrders.length === 0) return;
-    if (!confirm(`${selectedOrders.length} adet siparişi kalıcı olarak silmek istediğinize emin misiniz?`)) return;
-    
+    if (
+      !confirm(
+        `${selectedOrders.length} adet siparişi sistemden silmek istediğinize emin misiniz?`
+      )
+    )
+      return;
+
     setIsDeleting(true);
     try {
       const res = await deleteOrders(selectedOrders);
@@ -131,14 +192,24 @@ export default function SiparislerClient({ orders }: { orders: any[] }) {
     }
   };
 
-  const getWhatsAppLink = (phone: string | null) => {
+  const getWhatsAppLink = (name: string, phone: string | null, status: string, total: number) => {
     if (!phone) return null;
-    // Sadece rakamları al
-    let cleanPhone = phone.replace(/\D/g, '');
-    if (cleanPhone.length === 10) cleanPhone = '90' + cleanPhone;
-    if (cleanPhone.length === 11 && cleanPhone.startsWith('0')) cleanPhone = '90' + cleanPhone.slice(1);
-    const message = encodeURIComponent("Merhaba size Akademik Masadan ulaşıyorum ödeme yaptığınıza dair bir dekont atabilir misiniz?");
-    return `https://wa.me/${cleanPhone}?text=${message}`;
+    let cleanPhone = phone.replace(/\D/g, "");
+    if (cleanPhone.length === 10) cleanPhone = "90" + cleanPhone;
+    if (cleanPhone.length === 11 && cleanPhone.startsWith("0"))
+      cleanPhone = "90" + cleanPhone.slice(1);
+
+    const firstName = name.split(" ")[0];
+    let message = "";
+    if (status === "PENDING") {
+      message = `Merhaba ${firstName} Hanım/Bey, Akademik Masa eğitim paketiniz için havale ödemeniz bekleniyor. Ödemeyi gerçekleştirdiyseniz dekont iletebilir misiniz? Yardımcı olmaktan memnuniyet duyarız.`;
+    } else {
+      message = `Merhaba ${firstName} Hanım/Bey, Akademik Masa üzerinden yapmış olduğunuz ${total.toLocaleString(
+        "tr-TR"
+      )} ₺ tutarındaki ödemeniz onaylanmıştır. Eğitimlerinize panelinizden hemen başlayabilirsiniz. Keyifli çalışmalar dileriz!`;
+    }
+
+    return `https://wa.me/${cleanPhone}?text=${encodeURIComponent(message)}`;
   };
 
   const exportToExcel = () => {
@@ -152,336 +223,749 @@ export default function SiparislerClient({ orders }: { orders: any[] }) {
       "Satın Alınan Eğitimler",
       "Toplam Tutar (TL)",
       "Sipariş Durumu",
-      "Tarih"
+      "Tarih",
     ];
 
-    const rows = filteredAndSortedOrders.map(order => {
-      const orderId = order.id;
-      const name = order.user.name;
-      const email = order.user.email || "";
-      const phone = order.user.phone || "";
-      const tc = order.user.tc || "";
-      const address = (order.user.address || "").replace(/\r?\n|\r/g, " ");
-      const products = order.items.map((item: any) => item.product?.title || 'Bilinmeyen Ürün').join(", ");
-      const total = order.totalAmount;
-      const status = order.status === 'COMPLETED' ? 'Tamamlandı' : 
-                     order.status === 'PENDING' ? 'Bekliyor' : 'İptal Edildi';
-      const date = new Date(order.createdAt).toLocaleString('tr-TR');
+    const escapeHtml = (str: string) => {
+      return String(str || "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;");
+    };
 
-      return [
-        orderId,
-        name,
-        email,
-        phone,
-        tc,
-        address,
-        products,
-        total,
-        status,
-        date
-      ];
+    const rowsHtml = filteredAndSortedOrders
+      .map((order) => {
+        const orderId = escapeHtml(order.id);
+        const name = escapeHtml(order.user.name || "");
+        const email = escapeHtml(order.user.email || "");
+        const phone = escapeHtml(order.user.phone || "");
+        const tc = escapeHtml(order.user.tc || "");
+        const address = escapeHtml((order.user.address || "").replace(/\r?\n|\r/g, " "));
+        const products = escapeHtml(
+          order.items
+            .map((item: any) => item.product?.title || "Bilinmeyen Ürün")
+            .join(", ")
+        );
+        const total = order.totalAmount;
+        const status = escapeHtml(
+          order.status === "COMPLETED"
+            ? "Tamamlandı"
+            : order.status === "PENDING"
+            ? "Bekliyor"
+            : "İptal Edildi"
+        );
+        const date = escapeHtml(new Date(order.createdAt).toLocaleString("tr-TR"));
+
+        return `
+        <tr>
+          <td style="mso-number-format:'\\@';">${orderId}</td>
+          <td>${name}</td>
+          <td>${email}</td>
+          <td style="mso-number-format:'\\@';">${phone}</td>
+          <td style="mso-number-format:'\\@';">${tc}</td>
+          <td>${address}</td>
+          <td>${products}</td>
+          <td style="mso-number-format:'#,##0.00';">${total}</td>
+          <td>${status}</td>
+          <td>${date}</td>
+        </tr>
+      `;
+      })
+      .join("");
+
+    const template = `
+      <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
+        <head>
+          <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+          <!--[if gte mso 9]>
+          <xml>
+            <x:ExcelWorkbook>
+              <x:ExcelWorksheets>
+                <x:ExcelWorksheet>
+                  <x:Name>Siparişler</x:Name>
+                  <x:WorksheetOptions>
+                    <x:DisplayGridlines/>
+                  </x:WorksheetOptions>
+                </x:ExcelWorksheet>
+              </x:ExcelWorksheets>
+            </x:ExcelWorkbook>
+          </xml>
+          <![endif]-->
+          <style>
+            table { border-collapse: collapse; width: 100%; font-family: Calibri, sans-serif; font-size: 11pt; }
+            th { background-color: #1e293b; color: #ffffff; font-bold: bold; border: 1px solid #cbd5e1; padding: 8px 12px; text-align: left; }
+            td { border: 1px solid #e2e8f0; padding: 6px 10px; vertical-align: middle; }
+          </style>
+        </head>
+        <body>
+          <table>
+            <thead>
+              <tr>
+                ${headers.map((h) => `<th>${escapeHtml(h)}</th>`).join("")}
+              </tr>
+            </thead>
+            <tbody>
+              ${rowsHtml}
+            </tbody>
+          </table>
+        </body>
+      </html>
+    `;
+
+    const blob = new Blob(["\uFEFF" + template], {
+      type: "application/vnd.ms-excel;charset=utf-8",
     });
-
-    const csvContent = [
-      "sep=;",
-      headers.map(h => `"${h.replace(/"/g, '""')}"`).join(";"),
-      ...rows.map(row => row.map(val => {
-        const str = String(val);
-        return `"${str.replace(/"/g, '""')}"`;
-      }).join(";"))
-    ].join("\r\n");
-
-    const blob = new Blob(["\uFEFF" + csvContent], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.setAttribute("href", url);
-    link.setAttribute("download", `siparisler_${new Date().toISOString().slice(0, 10)}.csv`);
-    link.style.visibility = "hidden";
+    link.setAttribute("download", `siparisler_${new Date().toISOString().slice(0, 10)}.xls`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
   };
 
   return (
-    <div className="space-y-6">
-      
-      {/* Header & Filters */}
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+    <div className="space-y-8">
+      {/* Top Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">Siparişler</h1>
-          <p className="text-slate-500 text-sm mt-1">Sistemdeki tüm satın alımları yönetin ve filtreleyin.</p>
+          <h1 className="text-2xl font-extrabold text-slate-900 tracking-tight">
+            Sipariş Yönetim Paneli
+          </h1>
+          <p className="text-slate-500 text-sm mt-1">
+            Akademik Masa üzerindeki tüm ödemeleri, havale bekleyenleri ve onaylanmış eğitim siparişlerini buradan yönetebilirsiniz.
+          </p>
         </div>
-        
-        <div className="flex flex-col sm:flex-row items-center gap-4">
-          <div className="relative w-full sm:w-64">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-            <input 
-              type="text" 
-              placeholder="Sipariş no, isim, e-posta..." 
-              value={searchQuery}
-              onChange={e => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 outline-none transition-all"
-            />
-          </div>
-          
-          <div className="relative w-full sm:w-auto flex items-center">
-            <Filter className="absolute left-3 w-4 h-4 text-slate-400" />
-            <select 
-              value={filterStatus}
-              onChange={e => setFilterStatus(e.target.value)}
-              className="w-full sm:w-auto pl-9 pr-8 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-700 focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 outline-none cursor-pointer appearance-none transition-all"
-            >
-              <option value="ALL">Tüm Durumlar</option>
-              <option value="COMPLETED">Tamamlandı</option>
-              <option value="PENDING">Bekliyor</option>
-              <option value="FAILED">İptal / Hata</option>
-            </select>
-          </div>
 
-          <button 
-            onClick={exportToExcel}
-            className="w-full sm:w-auto bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-xl flex items-center justify-center gap-2 text-sm font-bold transition-all shadow-md hover:shadow-emerald-600/20 shrink-0 cursor-pointer"
-          >
-            <Download className="w-4 h-4" /> Excel'e Aktar
-          </button>
+        <button
+          onClick={exportToExcel}
+          className="w-full sm:w-auto bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-2.5 rounded-xl flex items-center justify-center gap-2 text-sm font-bold shadow-md hover:shadow-emerald-600/20 transition-all cursor-pointer"
+        >
+          <Download className="w-4 h-4" />
+          <span>Excel'e Aktar (Türkçe)</span>
+        </button>
+      </div>
+
+      {/* Summary Stat Cards */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm flex items-center gap-4">
+          <div className="w-12 h-12 rounded-xl bg-slate-100 text-slate-700 flex items-center justify-center font-bold shrink-0">
+            <ShoppingBag className="w-6 h-6" />
+          </div>
+          <div>
+            <span className="text-2xl font-black text-slate-900 leading-none">
+              {stats.totalCount}
+            </span>
+            <p className="text-xs font-semibold text-slate-500 mt-1">
+              Toplam Sipariş
+            </p>
+          </div>
+        </div>
+
+        <div className="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm flex items-center gap-4">
+          <div className="w-12 h-12 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold shrink-0">
+            <TrendingUp className="w-6 h-6" />
+          </div>
+          <div>
+            <span className="text-2xl font-black text-emerald-600 leading-none">
+              {stats.totalRevenue.toLocaleString("tr-TR")} ₺
+            </span>
+            <p className="text-xs font-semibold text-slate-500 mt-1">
+              Toplam Ciro (Onaylı)
+            </p>
+          </div>
+        </div>
+
+        <div className="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm flex items-center gap-4">
+          <div className="w-12 h-12 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center font-bold shrink-0">
+            <Clock className="w-6 h-6" />
+          </div>
+          <div>
+            <span className="text-2xl font-black text-amber-600 leading-none">
+              {stats.pendingRevenue.toLocaleString("tr-TR")} ₺
+            </span>
+            <p className="text-xs font-semibold text-slate-500 mt-1">
+              Bekleyen Tutar ({stats.pendingCount})
+            </p>
+          </div>
+        </div>
+
+        <div className="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm flex items-center gap-4">
+          <div className="w-12 h-12 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center font-bold shrink-0">
+            <CreditCard className="w-6 h-6" />
+          </div>
+          <div>
+            <span className="text-2xl font-black text-slate-900 leading-none">
+              {stats.completedCount}
+            </span>
+            <p className="text-xs font-semibold text-slate-500 mt-1">
+              Onaylanan Siparişler
+            </p>
+          </div>
         </div>
       </div>
 
-      {selectedOrders.length > 0 && (
-        <div className="bg-red-50 border border-red-200 p-4 rounded-2xl flex items-center justify-between">
-          <div className="text-red-700 font-bold">
-            {selectedOrders.length} sipariş seçildi
+      {/* Control Bar: Filter Tabs & Search */}
+      <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-sm flex flex-col md:flex-row items-center justify-between gap-4">
+        {/* Status Filter Tabs */}
+        <div className="flex items-center gap-1.5 p-1 bg-slate-100 rounded-xl w-full md:w-auto overflow-x-auto">
+          <button
+            onClick={() => setFilterStatus("ALL")}
+            className={`px-4 py-2 rounded-lg text-xs font-bold transition-all whitespace-nowrap cursor-pointer ${
+              filterStatus === "ALL"
+                ? "bg-white text-slate-900 shadow-sm"
+                : "text-slate-500 hover:text-slate-900"
+            }`}
+          >
+            Tümü ({stats.totalCount})
+          </button>
+          <button
+            onClick={() => setFilterStatus("PENDING")}
+            className={`px-4 py-2 rounded-lg text-xs font-bold transition-all whitespace-nowrap cursor-pointer flex items-center gap-1.5 ${
+              filterStatus === "PENDING"
+                ? "bg-amber-500 text-white shadow-sm"
+                : "text-amber-700 hover:bg-amber-50"
+            }`}
+          >
+            <Clock className="w-3.5 h-3.5" />
+            Bekleyenler ({stats.pendingCount})
+          </button>
+          <button
+            onClick={() => setFilterStatus("COMPLETED")}
+            className={`px-4 py-2 rounded-lg text-xs font-bold transition-all whitespace-nowrap cursor-pointer flex items-center gap-1.5 ${
+              filterStatus === "COMPLETED"
+                ? "bg-emerald-600 text-white shadow-sm"
+                : "text-emerald-700 hover:bg-emerald-50"
+            }`}
+          >
+            <Check className="w-3.5 h-3.5" />
+            Onaylananlar ({stats.completedCount})
+          </button>
+          <button
+            onClick={() => setFilterStatus("FAILED")}
+            className={`px-4 py-2 rounded-lg text-xs font-bold transition-all whitespace-nowrap cursor-pointer flex items-center gap-1.5 ${
+              filterStatus === "FAILED"
+                ? "bg-red-600 text-white shadow-sm"
+                : "text-red-700 hover:bg-red-50"
+            }`}
+          >
+            <XCircle className="w-3.5 h-3.5" />
+            İptal/Hata ({stats.failedCount})
+          </button>
+        </div>
+
+        {/* Search Bar */}
+        <div className="flex items-center gap-3 w-full md:w-auto">
+          <div className="relative w-full md:w-80">
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4" />
+            <input
+              type="text"
+              placeholder="Sipariş no, öğrenci adı, email, telefon..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-10 pr-9 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-all"
+            />
+            {searchQuery && (
+              <button
+                onClick={() => setSearchQuery("")}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            )}
           </div>
-          <button 
+
+          <div className="text-xs font-bold text-slate-500 bg-slate-50 px-3 py-2 rounded-xl border border-slate-200 shrink-0">
+            {filteredAndSortedOrders.length} Sonuç
+          </div>
+        </div>
+      </div>
+
+      {/* Bulk Operations Alert */}
+      {selectedOrders.length > 0 && (
+        <div className="bg-red-50 border border-red-200 p-4 rounded-2xl flex items-center justify-between animate-in fade-in slide-in-from-top-1 duration-200">
+          <div className="text-red-700 font-bold text-xs">
+            {selectedOrders.length} adet sipariş seçildi.
+          </div>
+          <button
             onClick={handleDeleteSelected}
             disabled={isDeleting}
-            className="flex items-center gap-2 bg-red-600 hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed text-white px-4 py-2 rounded-xl font-bold transition-colors text-sm shadow-sm"
+            className="flex items-center gap-2 bg-red-600 hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed text-white px-4 py-2 rounded-xl font-bold transition-all text-xs shadow-sm cursor-pointer"
           >
-            {isDeleting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
-            {isDeleting ? "Siliniyor..." : "Seçilenleri Sil"}
+            {isDeleting ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : (
+              <Trash2 className="w-4 h-4" />
+            )}
+            <span>{isDeleting ? "Siliniyor..." : "Seçilenleri Sil"}</span>
           </button>
         </div>
       )}
 
-      {/* Table */}
-      <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+      {/* Desktop View: Table Layout (visible on md screens and above) */}
+      <div className="hidden md:block bg-white rounded-2xl shadow-sm border border-slate-200/80 overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full text-left text-sm">
-            <thead className="bg-slate-50 text-slate-600 font-semibold border-b border-slate-100">
+          <table className="w-full text-left text-xs">
+            <thead className="bg-slate-50/80 text-slate-500 font-bold uppercase tracking-wider border-b border-slate-100">
               <tr>
                 <th className="px-6 py-4 w-12">
-                  <input 
+                  <input
                     type="checkbox"
-                    checked={filteredAndSortedOrders.length > 0 && selectedOrders.length === filteredAndSortedOrders.length}
+                    checked={
+                      filteredAndSortedOrders.length > 0 &&
+                      selectedOrders.length === filteredAndSortedOrders.length
+                    }
                     onChange={handleSelectAll}
                     className="w-4 h-4 rounded border-slate-300 text-brand-600 focus:ring-brand-500 cursor-pointer"
                   />
                 </th>
-                <th className="px-6 py-4 cursor-pointer hover:bg-slate-100 transition-colors select-none group" onClick={() => toggleSort("id")}>
-                  <div className="flex items-center gap-2">Sipariş No <span className="opacity-0 group-hover:opacity-100 transition-opacity">{getSortIcon("id")}</span></div>
+                <th
+                  className="px-6 py-4 cursor-pointer hover:bg-slate-100 transition-colors select-none group"
+                  onClick={() => toggleSort("id")}
+                >
+                  <div className="flex items-center gap-2">
+                    <span>Sipariş No</span>
+                    {getSortIcon("id")}
+                  </div>
                 </th>
-                <th className="px-6 py-4 cursor-pointer hover:bg-slate-100 transition-colors select-none group" onClick={() => toggleSort("user")}>
-                  <div className="flex items-center gap-2">Öğrenci {getSortIcon("user")}</div>
+                <th
+                  className="px-6 py-4 cursor-pointer hover:bg-slate-100 transition-colors select-none group"
+                  onClick={() => toggleSort("user")}
+                >
+                  <div className="flex items-center gap-2">
+                    <span>Öğrenci</span>
+                    {getSortIcon("user")}
+                  </div>
                 </th>
                 <th className="px-6 py-4 select-none">
-                  <div className="flex items-center gap-2">Kurslar</div>
+                  <span>Kurslar</span>
                 </th>
-                <th className="px-6 py-4 cursor-pointer hover:bg-slate-100 transition-colors select-none group" onClick={() => toggleSort("totalAmount")}>
-                  <div className="flex items-center gap-2">Tutar {getSortIcon("totalAmount")}</div>
+                <th
+                  className="px-6 py-4 cursor-pointer hover:bg-slate-100 transition-colors select-none group"
+                  onClick={() => toggleSort("totalAmount")}
+                >
+                  <div className="flex items-center gap-2">
+                    <span>Tutar</span>
+                    {getSortIcon("totalAmount")}
+                  </div>
                 </th>
-                <th className="px-6 py-4 cursor-pointer hover:bg-slate-100 transition-colors select-none group" onClick={() => toggleSort("status")}>
-                  <div className="flex items-center gap-2">Durum {getSortIcon("status")}</div>
+                <th
+                  className="px-6 py-4 cursor-pointer hover:bg-slate-100 transition-colors select-none group"
+                  onClick={() => toggleSort("status")}
+                >
+                  <div className="flex items-center gap-2">
+                    <span>Durum</span>
+                    {getSortIcon("status")}
+                  </div>
                 </th>
-                <th className="px-6 py-4 cursor-pointer hover:bg-slate-100 transition-colors select-none group" onClick={() => toggleSort("createdAt")}>
-                  <div className="flex items-center gap-2">Tarih {getSortIcon("createdAt")}</div>
+                <th
+                  className="px-6 py-4 cursor-pointer hover:bg-slate-100 transition-colors select-none group"
+                  onClick={() => toggleSort("createdAt")}
+                >
+                  <div className="flex items-center gap-2">
+                    <span>Tarih</span>
+                    {getSortIcon("createdAt")}
+                  </div>
                 </th>
-                <th className="px-6 py-4 text-right">Detaylar</th>
+                <th className="px-6 py-4 text-right">İşlemler</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100 text-slate-700">
+            <tbody className="divide-y divide-slate-100 text-slate-700 font-medium">
               {filteredAndSortedOrders.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="px-6 py-12 text-center text-slate-400">
+                  <td colSpan={8} className="px-6 py-16 text-center text-slate-400">
                     <ShoppingBag className="w-12 h-12 mx-auto mb-3 text-slate-200" />
-                    Aradığınız kriterlere uygun sipariş bulunamadı.
+                    Kriterlere uygun sipariş kaydı bulunamadı.
                   </td>
                 </tr>
               ) : (
-                filteredAndSortedOrders.map(order => (
-                  <tr key={order.id} className="hover:bg-slate-50 transition-colors">
-                    <td className="px-6 py-4">
-                      <input 
-                        type="checkbox"
-                        checked={selectedOrders.includes(order.id)}
-                        onChange={() => handleSelectOrder(order.id)}
-                        className="w-4 h-4 rounded border-slate-300 text-brand-600 focus:ring-brand-500 cursor-pointer"
-                      />
-                    </td>
-                    <td className="px-6 py-4 font-mono text-slate-500 text-xs">
-                      #{order.id.slice(-8).toUpperCase()}
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="flex flex-col">
-                        <span className="font-bold text-slate-900">{order.user.name}</span>
-                        <span className="text-xs text-slate-500">{order.user.email}</span>
-                        {order.user.phone && <span className="text-xs text-slate-400">{order.user.phone}</span>}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="flex flex-col gap-1 max-w-[200px]">
-                        {order.items.map((item: any) => (
-                          <span key={item.id} className="text-xs font-semibold text-slate-700 bg-slate-100 px-2 py-1 rounded-md truncate" title={item.product?.title || 'Bilinmeyen Ürün'}>
-                            {item.product?.title || 'Bilinmeyen Ürün'}
+                filteredAndSortedOrders.map((order) => {
+                  const waLink = getWhatsAppLink(
+                    order.user.name,
+                    order.user.phone || null,
+                    order.status,
+                    order.totalAmount
+                  );
+
+                  return (
+                    <tr
+                      key={order.id}
+                      className="hover:bg-slate-50/80 transition-colors group"
+                    >
+                      <td className="px-6 py-4">
+                        <input
+                          type="checkbox"
+                          checked={selectedOrders.includes(order.id)}
+                          onChange={() => handleSelectOrder(order.id)}
+                          className="w-4 h-4 rounded border-slate-300 text-brand-600 focus:ring-brand-500 cursor-pointer"
+                        />
+                      </td>
+
+                      {/* Order ID */}
+                      <td className="px-6 py-4 font-mono text-slate-500 text-[11px] font-bold">
+                        #{order.id.slice(-8).toUpperCase()}
+                      </td>
+
+                      {/* Student Info */}
+                      <td className="px-6 py-4">
+                        <div className="flex flex-col">
+                          <span className="font-bold text-slate-900 text-sm">
+                            {order.user.name}
                           </span>
-                        ))}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 font-black text-brand-600">
-                      {order.totalAmount.toLocaleString("tr-TR")} ₺
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="flex items-center gap-2">
-                        {loadingId === order.id ? (
-                          <div className="flex items-center gap-2 text-brand-600 text-xs font-semibold px-2">
-                            <Loader2 className="w-4 h-4 animate-spin" /> Güncelleniyor...
-                          </div>
-                        ) : (
-                          <select 
-                            value={order.status}
-                            onChange={(e) => handleStatusChange(order.id, e.target.value)}
-                            className={`px-3 py-1.5 rounded-lg text-xs font-bold outline-none border cursor-pointer ${
-                              order.status === 'COMPLETED' ? 'bg-emerald-50 text-emerald-700 border-emerald-200 focus:ring-emerald-500/20' :
-                              order.status === 'PENDING' ? 'bg-amber-50 text-amber-700 border-amber-200 focus:ring-amber-500/20' :
-                              'bg-red-50 text-red-700 border-red-200 focus:ring-red-500/20'
-                            }`}
+                          <span className="text-xs text-slate-500">
+                            {order.user.email}
+                          </span>
+                          {order.user.phone && (
+                            <span className="text-xs text-slate-400">
+                              {order.user.phone}
+                            </span>
+                          )}
+                        </div>
+                      </td>
+
+                      {/* Course Titles */}
+                      <td className="px-6 py-4">
+                        <div className="flex flex-col gap-1 max-w-[240px]">
+                          {order.items.map((item: any) => (
+                            <span
+                              key={item.id}
+                              className="text-[11px] font-bold text-slate-700 bg-slate-100/70 border border-slate-200/50 px-2 py-0.5 rounded-md truncate"
+                              title={item.product?.title || "Bilinmeyen Ürün"}
+                            >
+                              {item.product?.title || "Bilinmeyen Ürün"}
+                            </span>
+                          ))}
+                        </div>
+                      </td>
+
+                      {/* Total Amount */}
+                      <td className="px-6 py-4 font-black text-brand-600 text-sm">
+                        {order.totalAmount.toLocaleString("tr-TR")} ₺
+                      </td>
+
+                      {/* Status Dropdown */}
+                      <td className="px-6 py-4">
+                        <div className="flex items-center gap-2">
+                          {loadingId === order.id ? (
+                            <div className="flex items-center gap-1.5 text-brand-600 text-[11px] font-bold px-2 py-1 bg-brand-50 rounded-lg">
+                              <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                              <span>Güncelleniyor...</span>
+                            </div>
+                          ) : (
+                            <select
+                              value={order.status}
+                              onChange={(e) =>
+                                handleStatusChange(order.id, e.target.value)
+                              }
+                              className={`px-2.5 py-1.5 rounded-lg text-xs font-bold outline-none border cursor-pointer transition-all ${
+                                order.status === "COMPLETED"
+                                  ? "bg-emerald-50 text-emerald-800 border-emerald-200 focus:ring-emerald-500/20"
+                                  : order.status === "PENDING"
+                                  ? "bg-amber-50 text-amber-800 border-amber-200 focus:ring-amber-500/20"
+                                  : "bg-red-50 text-red-800 border-red-200 focus:ring-red-500/20"
+                              }`}
+                            >
+                              <option value="PENDING">Bekliyor (Havale/Eksik)</option>
+                              <option value="COMPLETED">Tamamlandı (Onaylı)</option>
+                              <option value="FAILED">İptal / Hata</option>
+                            </select>
+                          )}
+                        </div>
+                      </td>
+
+                      {/* Order Date */}
+                      <td className="px-6 py-4 text-slate-500 text-xs">
+                        <div className="font-bold">
+                          {new Date(order.createdAt).toLocaleDateString("tr-TR", {
+                            day: "2-digit",
+                            month: "short",
+                            year: "numeric",
+                          })}
+                        </div>
+                        <div className="text-[10px] text-slate-400 mt-0.5">
+                          {new Date(order.createdAt).toLocaleTimeString("tr-TR", {
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })}
+                        </div>
+                      </td>
+
+                      {/* Detail & Action Links */}
+                      <td className="px-6 py-4 text-right">
+                        <div className="flex items-center justify-end gap-1.5">
+                          {waLink && (
+                            <a
+                              href={waLink}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="p-1.5 text-[#25D366] hover:bg-[#25D366]/10 rounded-lg transition-all"
+                              title="Öğrenciye WhatsApp'tan Durum Bilgisi Gönder"
+                            >
+                              <MessageCircle className="w-4 h-4" />
+                            </a>
+                          )}
+                          <button
+                            onClick={() => setSelectedOrder(order)}
+                            className="p-1.5 text-slate-400 hover:text-brand-650 hover:bg-brand-50 rounded-lg transition-all cursor-pointer"
+                            title="Sipariş Detayı"
                           >
-                            <option value="PENDING">Bekliyor (Havale/Eksik)</option>
-                            <option value="COMPLETED">Tamamlandı (Onaylı)</option>
-                            <option value="FAILED">İptal Edildi</option>
-                          </select>
-                        )}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 text-slate-500 font-medium">
-                      {new Date(order.createdAt).toLocaleString('tr-TR', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
-                    </td>
-                    <td className="px-6 py-4 text-right">
-                      <div className="flex items-center justify-end gap-2">
-                        {order.user.phone && (
-                          <a 
-                            href={getWhatsAppLink(order.user.phone) || '#'}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="p-2 text-[#25D366] hover:bg-[#25D366]/10 rounded-lg transition-colors inline-flex"
-                            title="WhatsApp'tan Yaz"
-                          >
-                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-                              <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51a12.8 12.8 0 0 0-.57-.01c-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413Z"/>
-                            </svg>
-                          </a>
-                        )}
-                        <button 
-                          onClick={() => setSelectedOrder(order)}
-                          className="p-2 text-slate-400 hover:text-brand-600 hover:bg-brand-50 rounded-lg transition-colors inline-flex" 
-                          title="Sipariş Detayı"
-                        >
-                          <Eye className="w-5 h-5" />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))
+                            <Eye className="w-4.5 h-4.5" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })
               )}
             </tbody>
           </table>
         </div>
       </div>
 
-      {/* Order Details Modal */}
+      {/* Mobile View: Premium Cards List (visible on mobile only) */}
+      <div className="grid grid-cols-1 gap-4 md:hidden">
+        {filteredAndSortedOrders.length === 0 ? (
+          <div className="bg-white p-8 text-center text-slate-400 border border-slate-100 rounded-2xl shadow-xs">
+            Kriterlere uygun sipariş kaydı bulunamadı.
+          </div>
+        ) : (
+          filteredAndSortedOrders.map((order) => {
+            const waLink = getWhatsAppLink(
+              order.user.name,
+              order.user.phone || null,
+              order.status,
+              order.totalAmount
+            );
+
+            return (
+              <div key={order.id} className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm flex flex-col gap-3 animate-in fade-in-50 duration-200">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      checked={selectedOrders.includes(order.id)}
+                      onChange={() => handleSelectOrder(order.id)}
+                      className="w-4 h-4 rounded border-slate-300 text-brand-600 focus:ring-brand-500 cursor-pointer"
+                    />
+                    <span className="font-mono text-slate-500 text-[10px] font-bold">
+                      #{order.id.slice(-8).toUpperCase()}
+                    </span>
+                  </div>
+                  
+                  {loadingId === order.id ? (
+                    <span className="text-[10px] text-slate-400">Güncelleniyor...</span>
+                  ) : (
+                    <select
+                      value={order.status}
+                      onChange={(e) =>
+                        handleStatusChange(order.id, e.target.value)
+                      }
+                      className={`px-2 py-0.5 rounded text-[10px] font-bold outline-none border cursor-pointer ${
+                        order.status === "COMPLETED"
+                          ? "bg-emerald-50 text-emerald-800 border-emerald-200"
+                          : order.status === "PENDING"
+                          ? "bg-amber-50 text-amber-850 border-amber-200"
+                          : "bg-red-50 text-red-800 border-red-200"
+                      }`}
+                    >
+                      <option value="PENDING">Bekliyor</option>
+                      <option value="COMPLETED">Tamamlandı</option>
+                      <option value="FAILED">İptal</option>
+                    </select>
+                  )}
+                </div>
+
+                <div className="space-y-1.5 text-xs border-t border-slate-50 pt-2.5">
+                  <div className="flex justify-between">
+                    <span className="text-slate-400">Öğrenci:</span>
+                    <span className="font-bold text-slate-900">{order.user.name}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-slate-400">Tarih:</span>
+                    <span className="text-slate-650 font-semibold">
+                      {new Date(order.createdAt).toLocaleDateString("tr-TR")} {new Date(order.createdAt).toLocaleTimeString("tr-TR", { hour: '2-digit', minute: '2-digit' })}
+                    </span>
+                  </div>
+                  <div className="flex flex-col gap-1 mt-1.5">
+                    <span className="text-[10px] text-slate-400 font-bold uppercase">Satın Alınan Kurslar:</span>
+                    <div className="flex flex-wrap gap-1">
+                      {order.items.map((item: any) => (
+                        <span
+                          key={item.id}
+                          className="text-[10px] font-bold text-slate-700 bg-slate-100 border border-slate-200 px-2 py-0.5 rounded-md truncate max-w-full"
+                        >
+                          {item.product?.title || "Bilinmeyen Ürün"}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between border-t border-slate-50 pt-2.5">
+                  <div>
+                    <span className="text-[10px] text-slate-400 font-bold uppercase block">Tutar</span>
+                    <span className="font-black text-brand-650 text-sm">
+                      {order.totalAmount.toLocaleString("tr-TR")} ₺
+                    </span>
+                  </div>
+                  
+                  <div className="flex items-center gap-1">
+                    {waLink && (
+                      <a
+                        href={waLink}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="p-2 text-[#25D366] hover:bg-[#25D366]/10 rounded-lg transition-all"
+                        title="WhatsApp Bildirimi Gönder"
+                      >
+                        <MessageCircle className="w-4.5 h-4.5" />
+                      </a>
+                    )}
+                    <button
+                      onClick={() => setSelectedOrder(order)}
+                      className="p-2 text-slate-400 hover:text-brand-650 hover:bg-brand-50 rounded-lg transition-all cursor-pointer"
+                      title="Sipariş Detayı"
+                    >
+                      <Eye className="w-4.5 h-4.5" />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            );
+          })
+        )}
+      </div>
+
+      {/* Detailed Order Modal */}
       {selectedOrder && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm">
           <div className="bg-white rounded-3xl shadow-2xl max-w-2xl w-full flex flex-col max-h-[90vh] animate-in fade-in zoom-in duration-200">
-            
             {/* Modal Header */}
             <div className="flex items-center justify-between p-6 border-b border-slate-100">
               <div>
-                <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2">
+                <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">
                   <ShoppingBag className="w-5 h-5 text-brand-600" />
                   Sipariş Detayı
                 </h2>
-                <p className="text-sm text-slate-500 font-mono mt-1">#{selectedOrder.id}</p>
+                <p className="text-xs text-slate-400 font-mono mt-1">
+                  ID: {selectedOrder.id}
+                </p>
               </div>
-              <button 
+              <button
                 onClick={() => setSelectedOrder(null)}
-                className="p-2 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-full transition-colors"
+                className="p-2 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-full transition-colors cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
             {/* Modal Body */}
-            <div className="p-6 overflow-y-auto space-y-8">
-              
-              {/* Student Info */}
-              <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100 flex flex-col sm:flex-row gap-6">
+            <div className="p-6 overflow-y-auto space-y-6 text-xs">
+              {/* Student & Billing Info Grid */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-slate-50 p-5 rounded-2xl border border-slate-100">
                 <div>
-                  <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Öğrenci Bilgileri</p>
-                  <p className="font-bold text-slate-900">{selectedOrder.user.name}</p>
-                  <p className="text-sm text-slate-600">{selectedOrder.user.email}</p>
-                  <p className="text-sm text-slate-600">{selectedOrder.user.phone || 'Telefon yok'}</p>
-                  <p className="text-sm text-slate-600">{selectedOrder.user.tc ? `TC: ${selectedOrder.user.tc}` : 'TC kimlik yok'}</p>
+                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">
+                    Öğrenci Bilgileri
+                  </p>
+                  <p className="font-extrabold text-slate-900 text-sm">
+                    {selectedOrder.user.name}
+                  </p>
+                  <p className="text-slate-600 mt-1">{selectedOrder.user.email}</p>
+                  <p className="text-slate-600">{selectedOrder.user.phone || "Telefon belirtilmedi"}</p>
+                  {selectedOrder.user.tc && (
+                    <p className="text-slate-600 font-mono mt-0.5">
+                      TC: {selectedOrder.user.tc}
+                    </p>
+                  )}
                 </div>
-                <div className="hidden sm:block w-px bg-slate-200"></div>
-                <div>
-                  <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Sipariş Bilgileri</p>
-                  <p className="font-bold text-slate-900">Tarih: <span className="font-normal text-slate-600">{new Date(selectedOrder.createdAt).toLocaleString('tr-TR')}</span></p>
-                  <p className="font-bold text-slate-900 mt-1">Durum: <span className="font-normal text-slate-600">{
-                    selectedOrder.status === 'COMPLETED' ? 'Tamamlandı' : 
-                    selectedOrder.status === 'PENDING' ? 'Bekliyor' : 'İptal'
-                  }</span></p>
-                  {selectedOrder.paymentId && (
-                    <p className="font-bold text-slate-900 mt-1">Ödeme ID: <span className="font-mono text-xs font-normal text-slate-500 break-all">{selectedOrder.paymentId}</span></p>
+
+                <div className="border-t md:border-t-0 md:border-l border-slate-200 pt-4 md:pt-0 md:pl-5">
+                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">
+                    Sipariş & Teslimat
+                  </p>
+                  <p className="font-bold text-slate-900">
+                    Tarih:{" "}
+                    <span className="font-normal text-slate-600">
+                      {new Date(selectedOrder.createdAt).toLocaleString("tr-TR")}
+                    </span>
+                  </p>
+                  <p className="font-bold text-slate-900 mt-1">
+                    Durum:{" "}
+                    <span className="font-normal text-slate-600">
+                      {selectedOrder.status === "COMPLETED"
+                        ? "Tamamlandı"
+                        : selectedOrder.status === "PENDING"
+                        ? "Bekliyor"
+                        : "İptal"}
+                    </span>
+                  </p>
+                  {selectedOrder.user.address && (
+                    <div className="mt-2.5">
+                      <p className="text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">
+                        Açık Adres (Teslimat)
+                      </p>
+                      <p className="text-slate-700 bg-white p-2.5 rounded-lg border border-slate-200 leading-relaxed max-h-24 overflow-y-auto custom-scrollbar font-medium">
+                        {selectedOrder.user.address}
+                      </p>
+                    </div>
                   )}
                 </div>
               </div>
 
-              {/* Order Items */}
+              {/* Items List */}
               <div>
-                <h3 className="text-lg font-bold text-slate-900 mb-4">Satın Alınan Eğitimler</h3>
-                <div className="space-y-3">
+                <h3 className="text-sm font-bold text-slate-800 mb-3">
+                  Satın Alınan Kurslar
+                </h3>
+                <div className="space-y-2">
                   {selectedOrder.items.map((item: any) => (
-                    <div key={item.id} className="flex items-center gap-4 p-3 rounded-xl border border-slate-100 hover:border-brand-200 transition-colors">
+                    <div
+                      key={item.id}
+                      className="flex items-center gap-3.5 p-3 rounded-xl border border-slate-100 hover:border-brand-200 transition-colors bg-white"
+                    >
                       {item.product?.imageUrl ? (
-                        <img src={item.product.imageUrl} alt="" className="w-16 h-16 rounded-lg object-cover bg-slate-100 shrink-0" />
+                        <img
+                          src={item.product.imageUrl}
+                          alt=""
+                          className="w-12 h-12 rounded-lg object-cover bg-slate-100 shrink-0"
+                        />
                       ) : (
-                        <div className="w-16 h-16 rounded-lg bg-slate-100 flex items-center justify-center shrink-0">
-                          <ShoppingBag className="w-6 h-6 text-slate-300" />
+                        <div className="w-12 h-12 rounded-lg bg-slate-50 flex items-center justify-center shrink-0 border border-slate-100">
+                          <ShoppingBag className="w-5 h-5 text-slate-300" />
                         </div>
                       )}
                       <div className="flex-1 min-w-0">
-                        <p className="font-bold text-slate-900 truncate">{item.product?.title || 'Bilinmeyen Ürün'}</p>
-                        <p className="text-sm text-slate-500 truncate">{item.product?.lmsCourseId ? `LMS ID: ${item.product.lmsCourseId}` : 'LMS Entagrasyonu Yok'}</p>
+                        <p className="font-bold text-slate-900 truncate">
+                          {item.product?.title || "Bilinmeyen Ürün"}
+                        </p>
+                        <p className="text-[10px] text-slate-500 mt-0.5">
+                          {item.product?.lmsCourseId
+                            ? `LMS ID: ${item.product.lmsCourseId}`
+                            : "LMS Entegrasyonu yok"}
+                        </p>
                       </div>
                       <div className="text-right shrink-0">
-                        <p className="font-black text-brand-600">{item.price.toLocaleString("tr-TR")} ₺</p>
+                        <p className="font-extrabold text-brand-600 text-sm">
+                          {item.price.toLocaleString("tr-TR")} ₺
+                        </p>
                       </div>
                     </div>
                   ))}
                 </div>
               </div>
-
             </div>
 
             {/* Modal Footer */}
-            <div className="p-6 border-t border-slate-100 bg-slate-50 flex items-center justify-between rounded-b-3xl">
-              <span className="text-slate-500 font-medium">Toplam Tutar:</span>
-              <span className="text-2xl font-black text-slate-900">{selectedOrder.totalAmount.toLocaleString("tr-TR")} ₺</span>
+            <div className="p-5 border-t border-slate-100 bg-slate-50 flex items-center justify-between rounded-b-3xl">
+              <span className="text-slate-500 font-bold text-xs">Toplam Tutar:</span>
+              <span className="text-xl font-black text-slate-900">
+                {selectedOrder.totalAmount.toLocaleString("tr-TR")} ₺
+              </span>
             </div>
-
           </div>
         </div>
       )}
-
     </div>
   );
 }

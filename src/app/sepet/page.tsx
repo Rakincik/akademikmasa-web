@@ -1,5 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
+import { useSession } from "next-auth/react";
 import { Trash2, ArrowRight, ShieldCheck, CreditCard, Tag, ChevronLeft, ShoppingBag, Loader2, X } from "lucide-react";
 import Link from "next/link";
 import { useCart } from "../../context/CartContext";
@@ -7,6 +8,7 @@ import { useCart } from "../../context/CartContext";
 import { validateCoupon, getRecommendedProducts } from "./actions";
 
 export default function CartPage() {
+  const { data: session } = useSession();
   const { items, addToCart, removeFromCart } = useCart();
   const [allProducts, setAllProducts] = useState<any[]>([]);
   const [promoCode, setPromoCode] = useState("");
@@ -75,7 +77,7 @@ export default function CartPage() {
 
     setIsChecking(true);
     try {
-      const res = await validateCoupon(promoCode);
+      const res = await validateCoupon(promoCode, session?.user?.email || undefined, subtotal);
       if (res.success && res.coupon) {
         const allowedIds = res.coupon.allowedProductIds || [];
         if (allowedIds.length > 0) {

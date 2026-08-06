@@ -63,12 +63,17 @@ model Product {
 }
 
 model Category {
-  id        String    @id @default(cuid())
-  name      String    @unique
-  slug      String    @unique
-  products  Product[] @relation("ProductCategories")
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
+  id            String     @id @default(cuid())
+  name          String     @unique
+  slug          String     @unique
+  parentId      String?
+  parent        Category?  @relation("CategoryHierarchy", fields: [parentId], references: [id], onDelete: Cascade)
+  subcategories Category[] @relation("CategoryHierarchy")
+  order         Int        @default(0)
+  showInMenu    Boolean    @default(true)
+  products      Product[]  @relation("ProductCategories")
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
 }
 
 model Instructor {
@@ -118,26 +123,30 @@ model SiteContent {
 }
 
 model Coupon {
-  id           String   @id @default(cuid())
-  code         String   @unique
-  discountType String   // "FIXED" or "PERCENTAGE"
-  discountValue Float
-  isActive     Boolean  @default(true)
-  isInfluencer Boolean  @default(false)
-  influencerName String?
-  influencerEmail String?
+  id                 String    @id @default(cuid())
+  code               String    @unique
+  discountType       String    // "FIXED" or "PERCENTAGE"
+  discountValue      Float
+  isActive           Boolean   @default(true)
+  isInfluencer       Boolean   @default(false)
+  influencerName     String?
+  influencerEmail    String?
   
-  startDate    DateTime?
-  endDate      DateTime?
-  usageLimit   Int?
-  usedCount    Int      @default(0)
-  totalRevenue Float    @default(0)
+  onlyPreviousBuyers Boolean   @default(false)
+  allowedUserEmails  String[]
+  minOrderAmount     Float?
   
-  orders       Order[]
-  allowedProductIds String[]
+  startDate          DateTime?
+  endDate            DateTime?
+  usageLimit         Int?
+  usedCount          Int       @default(0)
+  totalRevenue       Float     @default(0)
   
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  orders             Order[]
+  allowedProductIds  String[]
+  
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
 }
 
 model LmsQueue {

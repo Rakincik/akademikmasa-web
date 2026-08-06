@@ -18,8 +18,9 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Akademik Masa | KPSS ve ÖABT Hazırlık",
-  description: "Türkiye'nin en iyi uzaktan eğitim platformu. Canlı dersler ve video eğitimlerle başarıya ulaşın.",
+  title: "Türkçe ÖABT UZEM | Türkçe ÖABT Uzaktan Eğitim ve Canlı Ders | Akademik Masa",
+  description: "Türkçe ÖABT uzaktan eğitim ve Türkçe ÖABT canlı ders ve Türkçe Öabt video ders programlarıyla binlerce öğretmen adayının tercihi. Türkçe ÖABT uzem tavsiye listelerinde yer alan Akademik Masa, Türkçe ÖABT derece başarısı, Türkçe Öabt dersleri, Türkçe Öabt konu anlatımları Türkçe ÖABT kamp programları, Türkçe Öabt soru çözümleri ve uzman kadrosuyla sınava hazırlıyor.",
+  keywords: "türkçe öabt uzem, türkçe öabt uzaktan eğitim, türkçe öabt, türkçe öabt uzem tavsiye, türkçe öabt uzaktan eğitim tavsiye, türkçe öabt derece, türkçe öabt kamp, türkçe öabt canlı ders",
 };
 
 export default function RootLayout({
