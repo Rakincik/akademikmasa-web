@@ -524,7 +524,7 @@ export default function SiparislerClient({ orders }: { orders: any[] }) {
           <table className="w-full text-left text-xs">
             <thead className="bg-slate-50/80 text-slate-500 font-bold uppercase tracking-wider border-b border-slate-100">
               <tr>
-                <th className="px-6 py-4 w-12">
+                <th className="px-3 py-3 w-12">
                   <input
                     type="checkbox"
                     checked={
@@ -536,7 +536,7 @@ export default function SiparislerClient({ orders }: { orders: any[] }) {
                   />
                 </th>
                 <th
-                  className="px-6 py-4 cursor-pointer hover:bg-slate-100 transition-colors select-none group"
+                  className="px-3 py-3 cursor-pointer hover:bg-slate-100 transition-colors select-none group"
                   onClick={() => toggleSort("id")}
                 >
                   <div className="flex items-center gap-2">
@@ -545,7 +545,7 @@ export default function SiparislerClient({ orders }: { orders: any[] }) {
                   </div>
                 </th>
                 <th
-                  className="px-6 py-4 cursor-pointer hover:bg-slate-100 transition-colors select-none group"
+                  className="px-3 py-3 cursor-pointer hover:bg-slate-100 transition-colors select-none group"
                   onClick={() => toggleSort("user")}
                 >
                   <div className="flex items-center gap-2">
@@ -553,11 +553,11 @@ export default function SiparislerClient({ orders }: { orders: any[] }) {
                     {getSortIcon("user")}
                   </div>
                 </th>
-                <th className="px-6 py-4 select-none">
+                <th className="px-3 py-3 select-none">
                   <span>Kurslar</span>
                 </th>
                 <th
-                  className="px-6 py-4 cursor-pointer hover:bg-slate-100 transition-colors select-none group"
+                  className="px-3 py-3 cursor-pointer hover:bg-slate-100 transition-colors select-none group"
                   onClick={() => toggleSort("totalAmount")}
                 >
                   <div className="flex items-center gap-2">
@@ -566,7 +566,7 @@ export default function SiparislerClient({ orders }: { orders: any[] }) {
                   </div>
                 </th>
                 <th
-                  className="px-6 py-4 cursor-pointer hover:bg-slate-100 transition-colors select-none group"
+                  className="px-3 py-3 cursor-pointer hover:bg-slate-100 transition-colors select-none group"
                   onClick={() => toggleSort("status")}
                 >
                   <div className="flex items-center gap-2">
@@ -575,7 +575,7 @@ export default function SiparislerClient({ orders }: { orders: any[] }) {
                   </div>
                 </th>
                 <th
-                  className="px-6 py-4 cursor-pointer hover:bg-slate-100 transition-colors select-none group"
+                  className="px-3 py-3 cursor-pointer hover:bg-slate-100 transition-colors select-none group"
                   onClick={() => toggleSort("createdAt")}
                 >
                   <div className="flex items-center gap-2">
@@ -583,7 +583,7 @@ export default function SiparislerClient({ orders }: { orders: any[] }) {
                     {getSortIcon("createdAt")}
                   </div>
                 </th>
-                <th className="px-6 py-4 text-right">İşlemler</th>
+                <th className="px-3 py-3 text-right">İşlemler</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 text-slate-700 font-medium">
@@ -608,7 +608,7 @@ export default function SiparislerClient({ orders }: { orders: any[] }) {
                       key={order.id}
                       className="hover:bg-slate-50/80 transition-colors group"
                     >
-                      <td className="px-6 py-4">
+                      <td className="px-3 py-3">
                         <input
                           type="checkbox"
                           checked={selectedOrders.includes(order.id)}
@@ -618,12 +618,12 @@ export default function SiparislerClient({ orders }: { orders: any[] }) {
                       </td>
 
                       {/* Order ID */}
-                      <td className="px-6 py-4 font-mono text-slate-500 text-[11px] font-bold">
+                      <td className="px-3 py-3 font-mono text-slate-500 text-[11px] font-bold">
                         #{order.id.slice(-8).toUpperCase()}
                       </td>
 
                       {/* Student Info */}
-                      <td className="px-6 py-4">
+                      <td className="px-3 py-3">
                         <div className="flex flex-col">
                           <span className="font-bold text-slate-900 text-sm">
                             {order.user.name}
@@ -640,8 +640,8 @@ export default function SiparislerClient({ orders }: { orders: any[] }) {
                       </td>
 
                       {/* Course Titles */}
-                      <td className="px-6 py-4">
-                        <div className="flex flex-col gap-1 max-w-[240px]">
+                      <td className="px-3 py-3">
+                        <div className="flex flex-col gap-1 max-w-[180px]">
                           {order.items.map((item: any) => (
                             <span
                               key={item.id}
@@ -655,12 +655,12 @@ export default function SiparislerClient({ orders }: { orders: any[] }) {
                       </td>
 
                       {/* Total Amount */}
-                      <td className="px-6 py-4 font-black text-brand-600 text-sm">
+                      <td className="px-3 py-3 font-black text-brand-600 text-sm">
                         {order.totalAmount.toLocaleString("tr-TR")} ₺
                       </td>
 
                       {/* Status Dropdown */}
-                      <td className="px-6 py-4">
+                      <td className="px-3 py-3">
                         <div className="flex items-center gap-2">
                           {loadingId === order.id ? (
                             <div className="flex items-center gap-1.5 text-brand-600 text-[11px] font-bold px-2 py-1 bg-brand-50 rounded-lg">
@@ -681,17 +681,17 @@ export default function SiparislerClient({ orders }: { orders: any[] }) {
                                   : "bg-red-50 text-red-800 border-red-200 focus:ring-red-500/20"
                               }`}
                             >
-                              <option value="PENDING">Bekliyor (Eksik/Havale)</option>
-                              <option value="COMPLETED">Shopier ile Onaylı</option>
-                              <option value="COMPLETED_HAVALE">Havale ile Onaylı</option>
-                              <option value="FAILED">İptal / Hata</option>
+                              <option value="PENDING">Bekliyor</option>
+                              <option value="COMPLETED">Shopier Onaylı</option>
+                              <option value="COMPLETED_HAVALE">Havale Onaylı</option>
+                              <option value="FAILED">İptal/Hata</option>
                             </select>
                           )}
                         </div>
                       </td>
 
                       {/* Order Date */}
-                      <td className="px-6 py-4 text-slate-500 text-xs">
+                      <td className="px-3 py-3 text-slate-500 text-xs">
                         <div className="font-bold">
                           {new Date(order.createdAt).toLocaleDateString("tr-TR", {
                             day: "2-digit",
@@ -708,7 +708,7 @@ export default function SiparislerClient({ orders }: { orders: any[] }) {
                       </td>
 
                       {/* Detail & Action Links */}
-                      <td className="px-6 py-4 text-right">
+                      <td className="px-3 py-3 text-right">
                         <div className="flex items-center justify-end gap-1.5">
                           {waLink && (
                             <a
