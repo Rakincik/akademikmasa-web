@@ -4,6 +4,9 @@ const next = require('next');
 const app = next({ dev: false, hostname: 'localhost', port: 3090 });
 const handle = app.getRequestHandler();
 app.prepare().then(() => {
+  // Arka planda Shopier Otomatik Senkronizasyon İşçisini başlat (10 dakikada bir çalışır)
+  require('./src/workers/shopier-sync-worker.js')();
+
   createServer(async (req, res) => {
     try {
       if (req.headers['origin'] && req.headers['origin'].includes(',')) req.headers['origin'] = req.headers['origin'].split(',')[0].trim();
