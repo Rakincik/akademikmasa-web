@@ -35,7 +35,7 @@ export default function SiparislerClient({ orders }: { orders: any[] }) {
   const [sortDir, setSortDir] = useState<SortDirection>("desc");
 
   // Filtering & Search State
-  const [filterStatus, setFilterStatus] = useState<"ALL" | "PENDING" | "COMPLETED" | "FAILED">("ALL");
+  const [filterStatus, setFilterStatus] = useState<"ALL" | "PENDING" | "COMPLETED" | "COMPLETED_HAVALE" | "FAILED">("ALL");
   const [searchQuery, setSearchQuery] = useState("");
 
   // Modal State
@@ -48,7 +48,9 @@ export default function SiparislerClient({ orders }: { orders: any[] }) {
   // Calculate stats
   const stats = useMemo(() => {
     const totalCount = orders.length;
-    const completedOrders = orders.filter((o) => o.status === "COMPLETED");
+    const completedOrders = orders.filter((o) => o.status === "COMPLETED" || o.status === "COMPLETED_HAVALE");
+    const completedShopierOrders = orders.filter((o) => o.status === "COMPLETED");
+    const completedHavaleOrders = orders.filter((o) => o.status === "COMPLETED_HAVALE");
     const pendingOrders = orders.filter((o) => o.status === "PENDING");
     const failedOrders = orders.filter((o) => o.status === "FAILED");
 
@@ -58,6 +60,8 @@ export default function SiparislerClient({ orders }: { orders: any[] }) {
     return {
       totalCount,
       completedCount: completedOrders.length,
+      completedShopierCount: completedShopierOrders.length,
+      completedHavaleCount: completedHavaleOrders.length,
       pendingCount: pendingOrders.length,
       failedCount: failedOrders.length,
       totalRevenue,
@@ -249,8 +253,8 @@ export default function SiparislerClient({ orders }: { orders: any[] }) {
         );
         const total = order.totalAmount;
         const status = escapeHtml(
-          order.status === "COMPLETED"
-            ? "Tamamlandı"
+          order.status.startsWith("COMPLETED")
+            ? (order.status === "COMPLETED_HAVALE" ? "Tamamlandı (Havale)" : "Tamamlandı (Shopier)")
             : order.status === "PENDING"
             ? "Bekliyor"
             : "İptal Edildi"
@@ -440,7 +444,18 @@ export default function SiparislerClient({ orders }: { orders: any[] }) {
             }`}
           >
             <Check className="w-3.5 h-3.5" />
-            Onaylananlar ({stats.completedCount})
+            Shopier ({stats.completedShopierCount})
+          </button>
+          <button
+            onClick={() => setFilterStatus("COMPLETED_HAVALE")}
+            className={`px-4 py-2 rounded-lg text-xs font-bold transition-all whitespace-nowrap cursor-pointer flex items-center gap-1.5 ${
+              filterStatus === "COMPLETED_HAVALE"
+                ? "bg-teal-600 text-white shadow-sm"
+                : "text-teal-700 hover:bg-teal-50"
+            }`}
+          >
+            <CheckCircle className="w-3.5 h-3.5" />
+            Havale ({stats.completedHavaleCount})
           </button>
           <button
             onClick={() => setFilterStatus("FAILED")}
@@ -659,15 +674,16 @@ export default function SiparislerClient({ orders }: { orders: any[] }) {
                                 handleStatusChange(order.id, e.target.value)
                               }
                               className={`px-2.5 py-1.5 rounded-lg text-xs font-bold outline-none border cursor-pointer transition-all ${
-                                order.status === "COMPLETED"
+                                order.status.startsWith("COMPLETED")
                                   ? "bg-emerald-50 text-emerald-800 border-emerald-200 focus:ring-emerald-500/20"
                                   : order.status === "PENDING"
                                   ? "bg-amber-50 text-amber-800 border-amber-200 focus:ring-amber-500/20"
                                   : "bg-red-50 text-red-800 border-red-200 focus:ring-red-500/20"
                               }`}
                             >
-                              <option value="PENDING">Bekliyor (Havale/Eksik)</option>
-                              <option value="COMPLETED">Tamamlandı (Onaylı)</option>
+                              <option value="PENDING">Bekliyor (Eksik/Havale)</option>
+                              <option value="COMPLETED">Shopier ile Onaylı</option>
+                              <option value="COMPLETED_HAVALE">Havale ile Onaylı</option>
                               <option value="FAILED">İptal / Hata</option>
                             </select>
                           )}
@@ -762,7 +778,7 @@ export default function SiparislerClient({ orders }: { orders: any[] }) {
                         handleStatusChange(order.id, e.target.value)
                       }
                       className={`px-2 py-0.5 rounded text-[10px] font-bold outline-none border cursor-pointer ${
-                        order.status === "COMPLETED"
+                        order.status.startsWith("COMPLETED")
                           ? "bg-emerald-50 text-emerald-800 border-emerald-200"
                           : order.status === "PENDING"
                           ? "bg-amber-50 text-amber-850 border-amber-200"
@@ -770,7 +786,8 @@ export default function SiparislerClient({ orders }: { orders: any[] }) {
                       }`}
                     >
                       <option value="PENDING">Bekliyor</option>
-                      <option value="COMPLETED">Tamamlandı</option>
+                      <option value="COMPLETED">Onay (Shopier)</option>
+                      <option value="COMPLETED_HAVALE">Onay (Havale)</option>
                       <option value="FAILED">İptal</option>
                     </select>
                   )}

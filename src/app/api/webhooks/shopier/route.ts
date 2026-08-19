@@ -57,6 +57,20 @@ export async function POST(request: Request) {
         data: { status: 'COMPLETED' }
       });
 
+      // Kopya/Yarım kalanları iptal et
+      try {
+        await prisma.order.updateMany({
+          where: {
+            userId: order.userId,
+            status: 'PENDING',
+            id: { not: order.id }
+          },
+          data: { status: 'FAILED' }
+        });
+      } catch (err) {
+        console.error("Webhook: Kopya siparişler temizlenirken hata:", err);
+      }
+
       if (order.couponId) {
         await prisma.coupon.update({
           where: { id: order.couponId },

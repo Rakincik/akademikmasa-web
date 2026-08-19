@@ -63,7 +63,7 @@ export async function validateCoupon(code: string, userEmail?: string, cartSubto
     const previousOrder = await prisma.order.findFirst({
       where: {
         user: { email: userEmail.toLowerCase() },
-        status: "COMPLETED"
+        status: { in: ["COMPLETED", "COMPLETED_HAVALE"] }
       }
     });
 

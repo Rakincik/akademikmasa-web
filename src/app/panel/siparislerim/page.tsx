@@ -84,11 +84,11 @@ export default async function OrdersPage() {
                 
                 <div>
                   <span className={`px-4 py-1.5 rounded-full text-xs font-bold ${
-                    order.status === "COMPLETED" ? "bg-emerald-100 text-emerald-700 border border-emerald-200" :
+                    order.status.startsWith("COMPLETED") ? "bg-emerald-100 text-emerald-700 border border-emerald-200" :
                     order.status === "PENDING" ? "bg-amber-100 text-amber-700 border border-amber-200" :
                     "bg-red-100 text-red-700 border border-red-200"
                   }`}>
-                    {order.status === "COMPLETED" ? "TAMAMLANDI" : order.status === "PENDING" ? "BEKLİYOR" : "İPTAL/HATA"}
+                    {order.status.startsWith("COMPLETED") ? "TAMAMLANDI" : order.status === "PENDING" ? "BEKLİYOR" : "İPTAL/HATA"}
                   </span>
                 </div>
               </div>
@@ -115,7 +115,7 @@ export default async function OrdersPage() {
                     </div>
 
                     <div className="shrink-0 mt-4 sm:mt-0">
-                      {order.status === "COMPLETED" ? (
+                      {order.status.startsWith("COMPLETED") ? (
                         <Link 
                           href="https://akm.muro.click/admin/dashboard"
                           target="_blank"

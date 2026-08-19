@@ -62,6 +62,16 @@ async function syncShopierOrders() {
           data: { status: 'COMPLETED' }
         });
 
+        // Kopya/Yarım kalanları iptal et
+        await prisma.order.updateMany({
+          where: {
+            userId: order.userId,
+            status: 'PENDING',
+            id: { not: order.id }
+          },
+          data: { status: 'FAILED' }
+        });
+
         // Kupon varsa kullanımı artır
         if (order.couponId) {
           await prisma.coupon.update({

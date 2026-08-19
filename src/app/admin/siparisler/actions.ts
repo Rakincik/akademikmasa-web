@@ -24,7 +24,22 @@ export async function updateOrderStatus(orderId: string, newStatus: string) {
   });
 
   // Eğer sipariş onaylanmışsa (COMPLETED) LMS kuyruğuna ekle
-  if (newStatus === "COMPLETED" && order.status !== "COMPLETED") {
+  if (newStatus.startsWith("COMPLETED") && !order.status.startsWith("COMPLETED")) {
+    
+    // Kopya/yarım kalmış "Bekliyor" siparişleri iptal et
+    try {
+      await prisma.order.updateMany({
+        where: {
+          userId: order.userId,
+          status: "PENDING",
+          id: { not: order.id }
+        },
+        data: { status: "FAILED" }
+      });
+    } catch (err) {
+      console.error("Kopya siparişler temizlenirken hata:", err);
+    }
+
     const hasLmsCourse = order.items.some((item) => (item.product as any)?.lmsCourseId);
     
     if (hasLmsCourse) {
