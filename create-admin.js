@@ -3,21 +3,17 @@ const prisma = new PrismaClient();
 
 async function main() {
   const adminEmail = 'admin@akademikmasa.com';
-  const adminPassword = 'admin'; // Şifrelenmeden direkt düz metin (auth.ts öyle bekliyor)
+  const adminPassword = 'Ufuk.Zu.2026';
 
   console.log(`Veritabanına bağlanılıyor...`);
 
-  const existingAdmin = await prisma.user.findUnique({
-    where: { email: adminEmail }
-  });
-
-  if (existingAdmin) {
-    console.log(`Admin kullanıcısı zaten mevcut: ${adminEmail}`);
-    return;
-  }
-
-  const user = await prisma.user.create({
-    data: {
+  const user = await prisma.user.upsert({
+    where: { email: adminEmail },
+    update: {
+      password: adminPassword,
+      role: 'ADMIN'
+    },
+    create: {
       name: 'Yönetici',
       email: adminEmail,
       password: adminPassword,
