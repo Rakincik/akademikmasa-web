@@ -2,14 +2,14 @@ import { prisma } from "@/lib/prisma";
 import SiparislerClient from "./SiparislerClient";
 
 export default async function SiparislerPage() {
-  // 1. 2 saatten eski olan ve hâlâ PENDING (Bekliyor) olarak kalan yarım kalmış kredi kartı ödemelerini otomatik olarak FAILED yap.
+  // 1. 30 dakikadan eski olan ve hâlâ PENDING (Bekliyor) olarak kalan yarım kalmış kredi kartı ödemelerini otomatik olarak FAILED yap.
   // Bu sayede havada kalan eski kart denemeleri "Bekleyenler" listesinden temizlenip "İptal/Hata" kısmına taşınır.
-  const twoHoursAgo = new Date(Date.now() - 2 * 60 * 60 * 1000);
+  const thirtyMinutesAgo = new Date(Date.now() - 30 * 60 * 1000);
   try {
     await prisma.order.updateMany({
       where: {
         status: "PENDING",
-        createdAt: { lt: twoHoursAgo }
+        createdAt: { lt: thirtyMinutesAgo }
       },
       data: { status: "FAILED" }
     });
