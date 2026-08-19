@@ -520,11 +520,11 @@ export default function SiparislerClient({ orders }: { orders: any[] }) {
 
       {/* Desktop View: Table Layout (visible on md screens and above) */}
       <div className="hidden md:block bg-white rounded-2xl shadow-sm border border-slate-200/80 overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs">
+        <div className="w-full">
+          <table className="w-full table-fixed text-left text-xs">
             <thead className="bg-slate-50/80 text-slate-500 font-bold uppercase tracking-wider border-b border-slate-100">
               <tr>
-                <th className="px-3 py-3 w-12">
+                <th className="px-3 py-3 w-10">
                   <input
                     type="checkbox"
                     checked={
@@ -536,54 +536,54 @@ export default function SiparislerClient({ orders }: { orders: any[] }) {
                   />
                 </th>
                 <th
-                  className="px-3 py-3 cursor-pointer hover:bg-slate-100 transition-colors select-none group"
+                  className="px-3 py-3 w-28 cursor-pointer hover:bg-slate-100 transition-colors select-none group"
                   onClick={() => toggleSort("id")}
                 >
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-1">
                     <span>Sipariş No</span>
                     {getSortIcon("id")}
                   </div>
                 </th>
                 <th
-                  className="px-3 py-3 cursor-pointer hover:bg-slate-100 transition-colors select-none group"
+                  className="px-3 py-3 w-48 cursor-pointer hover:bg-slate-100 transition-colors select-none group"
                   onClick={() => toggleSort("user")}
                 >
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-1">
                     <span>Öğrenci</span>
                     {getSortIcon("user")}
                   </div>
                 </th>
-                <th className="px-3 py-3 select-none">
+                <th className="px-3 py-3 w-auto select-none">
                   <span>Kurslar</span>
                 </th>
                 <th
-                  className="px-3 py-3 cursor-pointer hover:bg-slate-100 transition-colors select-none group"
+                  className="px-3 py-3 w-24 cursor-pointer hover:bg-slate-100 transition-colors select-none group"
                   onClick={() => toggleSort("totalAmount")}
                 >
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-1">
                     <span>Tutar</span>
                     {getSortIcon("totalAmount")}
                   </div>
                 </th>
                 <th
-                  className="px-3 py-3 cursor-pointer hover:bg-slate-100 transition-colors select-none group"
+                  className="px-3 py-3 w-40 cursor-pointer hover:bg-slate-100 transition-colors select-none group"
                   onClick={() => toggleSort("status")}
                 >
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-1">
                     <span>Durum</span>
                     {getSortIcon("status")}
                   </div>
                 </th>
                 <th
-                  className="px-3 py-3 cursor-pointer hover:bg-slate-100 transition-colors select-none group"
+                  className="px-3 py-3 w-24 cursor-pointer hover:bg-slate-100 transition-colors select-none group"
                   onClick={() => toggleSort("createdAt")}
                 >
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-1">
                     <span>Tarih</span>
                     {getSortIcon("createdAt")}
                   </div>
                 </th>
-                <th className="px-3 py-3 text-right">İşlemler</th>
+                <th className="px-3 py-3 w-16 text-right">İşlem</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 text-slate-700 font-medium">
@@ -623,16 +623,16 @@ export default function SiparislerClient({ orders }: { orders: any[] }) {
                       </td>
 
                       {/* Student Info */}
-                      <td className="px-3 py-3">
+                      <td className="px-3 py-3 overflow-hidden">
                         <div className="flex flex-col">
-                          <span className="font-bold text-slate-900 text-sm">
+                          <span className="font-bold text-slate-900 text-sm truncate">
                             {order.user.name}
                           </span>
-                          <span className="text-xs text-slate-500">
+                          <span className="text-xs text-slate-500 truncate" title={order.user.email}>
                             {order.user.email}
                           </span>
                           {order.user.phone && (
-                            <span className="text-xs text-slate-400">
+                            <span className="text-xs text-slate-400 truncate">
                               {order.user.phone}
                             </span>
                           )}
@@ -641,11 +641,11 @@ export default function SiparislerClient({ orders }: { orders: any[] }) {
 
                       {/* Course Titles */}
                       <td className="px-3 py-3">
-                        <div className="flex flex-col gap-1 max-w-[180px]">
+                        <div className="flex flex-col gap-1 w-full">
                           {order.items.map((item: any) => (
                             <span
                               key={item.id}
-                              className="text-[11px] font-bold text-slate-700 bg-slate-100/70 border border-slate-200/50 px-2 py-0.5 rounded-md truncate"
+                              className="text-[11px] font-bold text-slate-700 bg-slate-100/70 border border-slate-200/50 px-2 py-0.5 rounded-md truncate w-full"
                               title={item.product?.title || "Bilinmeyen Ürün"}
                             >
                               {item.product?.title || "Bilinmeyen Ürün"}
@@ -661,9 +661,9 @@ export default function SiparislerClient({ orders }: { orders: any[] }) {
 
                       {/* Status Dropdown */}
                       <td className="px-3 py-3">
-                        <div className="flex items-center gap-2">
+                        <div className="flex-1 min-w-[140px]">
                           {loadingId === order.id ? (
-                            <div className="flex items-center gap-1.5 text-brand-600 text-[11px] font-bold px-2 py-1 bg-brand-50 rounded-lg">
+                            <div className="flex items-center gap-1.5 text-brand-600 text-[11px] font-bold px-2 py-1 bg-brand-50 rounded-lg w-full">
                               <Loader2 className="w-3.5 h-3.5 animate-spin" />
                               <span>Güncelleniyor...</span>
                             </div>
@@ -673,15 +673,16 @@ export default function SiparislerClient({ orders }: { orders: any[] }) {
                               onChange={(e) =>
                                 handleStatusChange(order.id, e.target.value)
                               }
-                              className={`px-2.5 py-1.5 rounded-lg text-xs font-bold outline-none border cursor-pointer transition-all ${
+                              disabled={loadingId === order.id}
+                              className={`w-full px-2.5 py-1.5 rounded-lg text-xs font-bold outline-none border cursor-pointer transition-all ${
                                 order.status.startsWith("COMPLETED")
-                                  ? "bg-emerald-50 text-emerald-800 border-emerald-200 focus:ring-emerald-500/20"
+                                  ? "bg-emerald-50 text-emerald-800 border-emerald-200"
                                   : order.status === "PENDING"
-                                  ? "bg-amber-50 text-amber-800 border-amber-200 focus:ring-amber-500/20"
-                                  : "bg-red-50 text-red-800 border-red-200 focus:ring-red-500/20"
+                                  ? "bg-amber-50 text-amber-800 border-amber-200"
+                                  : "bg-red-50 text-red-800 border-red-200"
                               }`}
                             >
-                              <option value="PENDING">Bekliyor</option>
+                              <option value="PENDING">Bekliyor (Havale/Eksik)</option>
                               <option value="COMPLETED">Shopier Onaylı</option>
                               <option value="COMPLETED_HAVALE">Havale Onaylı</option>
                               <option value="FAILED">İptal/Hata</option>
