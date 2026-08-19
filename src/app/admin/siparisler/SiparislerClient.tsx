@@ -524,7 +524,7 @@ export default function SiparislerClient({ orders }: { orders: any[] }) {
           <table className="w-full table-fixed text-left text-xs">
             <thead className="bg-slate-50/80 text-slate-500 font-bold uppercase tracking-wider border-b border-slate-100">
               <tr>
-                <th className="px-3 py-3 w-10">
+                <th className="px-2 py-3 w-[4%]">
                   <input
                     type="checkbox"
                     checked={
@@ -536,7 +536,7 @@ export default function SiparislerClient({ orders }: { orders: any[] }) {
                   />
                 </th>
                 <th
-                  className="px-3 py-3 w-28 cursor-pointer hover:bg-slate-100 transition-colors select-none group"
+                  className="px-2 py-3 w-[12%] cursor-pointer hover:bg-slate-100 transition-colors select-none group"
                   onClick={() => toggleSort("id")}
                 >
                   <div className="flex items-center gap-1">
@@ -545,7 +545,7 @@ export default function SiparislerClient({ orders }: { orders: any[] }) {
                   </div>
                 </th>
                 <th
-                  className="px-3 py-3 w-48 cursor-pointer hover:bg-slate-100 transition-colors select-none group"
+                  className="px-2 py-3 w-[20%] cursor-pointer hover:bg-slate-100 transition-colors select-none group"
                   onClick={() => toggleSort("user")}
                 >
                   <div className="flex items-center gap-1">
@@ -553,11 +553,11 @@ export default function SiparislerClient({ orders }: { orders: any[] }) {
                     {getSortIcon("user")}
                   </div>
                 </th>
-                <th className="px-3 py-3 w-auto select-none">
+                <th className="px-2 py-3 w-[22%] select-none">
                   <span>Kurslar</span>
                 </th>
                 <th
-                  className="px-3 py-3 w-24 cursor-pointer hover:bg-slate-100 transition-colors select-none group"
+                  className="px-2 py-3 w-[10%] cursor-pointer hover:bg-slate-100 transition-colors select-none group"
                   onClick={() => toggleSort("totalAmount")}
                 >
                   <div className="flex items-center gap-1">
@@ -566,7 +566,7 @@ export default function SiparislerClient({ orders }: { orders: any[] }) {
                   </div>
                 </th>
                 <th
-                  className="px-3 py-3 w-40 cursor-pointer hover:bg-slate-100 transition-colors select-none group"
+                  className="px-2 py-3 w-[14%] cursor-pointer hover:bg-slate-100 transition-colors select-none group"
                   onClick={() => toggleSort("status")}
                 >
                   <div className="flex items-center gap-1">
@@ -575,7 +575,7 @@ export default function SiparislerClient({ orders }: { orders: any[] }) {
                   </div>
                 </th>
                 <th
-                  className="px-3 py-3 w-24 cursor-pointer hover:bg-slate-100 transition-colors select-none group"
+                  className="px-2 py-3 w-[10%] cursor-pointer hover:bg-slate-100 transition-colors select-none group"
                   onClick={() => toggleSort("createdAt")}
                 >
                   <div className="flex items-center gap-1">
@@ -583,7 +583,7 @@ export default function SiparislerClient({ orders }: { orders: any[] }) {
                     {getSortIcon("createdAt")}
                   </div>
                 </th>
-                <th className="px-3 py-3 w-16 text-right">İşlem</th>
+                <th className="px-2 py-3 w-[8%] text-right">İşlem</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 text-slate-700 font-medium">
@@ -608,7 +608,7 @@ export default function SiparislerClient({ orders }: { orders: any[] }) {
                       key={order.id}
                       className="hover:bg-slate-50/80 transition-colors group"
                     >
-                      <td className="px-3 py-3">
+                      <td className="px-2 py-3">
                         <input
                           type="checkbox"
                           checked={selectedOrders.includes(order.id)}
@@ -618,12 +618,12 @@ export default function SiparislerClient({ orders }: { orders: any[] }) {
                       </td>
 
                       {/* Order ID */}
-                      <td className="px-3 py-3 font-mono text-slate-500 text-[11px] font-bold">
+                      <td className="px-2 py-3 font-mono text-slate-500 text-[10px] font-bold truncate" title={order.id}>
                         #{order.id.slice(-8).toUpperCase()}
                       </td>
 
                       {/* Student Info */}
-                      <td className="px-3 py-3 overflow-hidden">
+                      <td className="px-2 py-3 overflow-hidden">
                         <div className="flex flex-col">
                           <span className="font-bold text-slate-900 text-sm truncate">
                             {order.user.name}
@@ -640,12 +640,12 @@ export default function SiparislerClient({ orders }: { orders: any[] }) {
                       </td>
 
                       {/* Course Titles */}
-                      <td className="px-3 py-3">
+                      <td className="px-2 py-3">
                         <div className="flex flex-col gap-1 w-full">
                           {order.items.map((item: any) => (
                             <span
                               key={item.id}
-                              className="text-[11px] font-bold text-slate-700 bg-slate-100/70 border border-slate-200/50 px-2 py-0.5 rounded-md truncate w-full"
+                              className="text-[10px] font-bold text-slate-700 bg-slate-100/70 border border-slate-200/50 px-1.5 py-0.5 rounded-md truncate w-full"
                               title={item.product?.title || "Bilinmeyen Ürün"}
                             >
                               {item.product?.title || "Bilinmeyen Ürün"}
@@ -655,17 +655,17 @@ export default function SiparislerClient({ orders }: { orders: any[] }) {
                       </td>
 
                       {/* Total Amount */}
-                      <td className="px-3 py-3 font-black text-brand-600 text-sm">
+                      <td className="px-2 py-3 font-black text-brand-600 text-xs">
                         {order.totalAmount.toLocaleString("tr-TR")} ₺
                       </td>
 
                       {/* Status Dropdown */}
-                      <td className="px-3 py-3">
-                        <div className="flex-1 min-w-[140px]">
+                      <td className="px-2 py-3">
+                        <div className="flex items-center gap-1 w-full">
                           {loadingId === order.id ? (
-                            <div className="flex items-center gap-1.5 text-brand-600 text-[11px] font-bold px-2 py-1 bg-brand-50 rounded-lg w-full">
+                            <div className="flex items-center gap-1.5 text-brand-600 text-[10px] font-bold px-2 py-1 bg-brand-50 rounded-lg w-full">
                               <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                              <span>Güncelleniyor...</span>
+                              <span>...</span>
                             </div>
                           ) : (
                             <select
@@ -674,15 +674,15 @@ export default function SiparislerClient({ orders }: { orders: any[] }) {
                                 handleStatusChange(order.id, e.target.value)
                               }
                               disabled={loadingId === order.id}
-                              className={`w-full px-2.5 py-1.5 rounded-lg text-xs font-bold outline-none border cursor-pointer transition-all ${
+                              className={`w-full px-1 py-1.5 rounded-lg text-[10px] font-bold outline-none border cursor-pointer transition-all ${
                                 order.status.startsWith("COMPLETED")
-                                  ? "bg-emerald-50 text-emerald-800 border-emerald-200"
+                                  ? "bg-emerald-50 text-emerald-800 border-emerald-200 focus:ring-emerald-500/20"
                                   : order.status === "PENDING"
-                                  ? "bg-amber-50 text-amber-800 border-amber-200"
-                                  : "bg-red-50 text-red-800 border-red-200"
+                                  ? "bg-amber-50 text-amber-800 border-amber-200 focus:ring-amber-500/20"
+                                  : "bg-red-50 text-red-800 border-red-200 focus:ring-red-500/20"
                               }`}
                             >
-                              <option value="PENDING">Bekliyor (Havale/Eksik)</option>
+                              <option value="PENDING">Bekliyor (Havale)</option>
                               <option value="COMPLETED">Shopier Onaylı</option>
                               <option value="COMPLETED_HAVALE">Havale Onaylı</option>
                               <option value="FAILED">İptal/Hata</option>
@@ -692,7 +692,7 @@ export default function SiparislerClient({ orders }: { orders: any[] }) {
                       </td>
 
                       {/* Order Date */}
-                      <td className="px-3 py-3 text-slate-500 text-xs">
+                      <td className="px-2 py-3 text-slate-500 text-[11px]">
                         <div className="font-bold">
                           {new Date(order.createdAt).toLocaleDateString("tr-TR", {
                             day: "2-digit",
@@ -709,8 +709,8 @@ export default function SiparislerClient({ orders }: { orders: any[] }) {
                       </td>
 
                       {/* Detail & Action Links */}
-                      <td className="px-3 py-3 text-right">
-                        <div className="flex items-center justify-end gap-1.5">
+                      <td className="px-2 py-3 text-right">
+                        <div className="flex justify-end gap-1.5">
                           {waLink && (
                             <a
                               href={waLink}
