@@ -173,11 +173,22 @@ export default function ProductModal({ isOpen, onClose, instructors, categories,
   };
 
   const addCustomLmsGroup = (codeToAdd?: string) => {
-    const code = (codeToAdd || customLmsInput).trim();
-    if (!code) return;
-    if (!lmsCourseIds.includes(code)) {
-      setLmsCourseIds(prev => [...prev, code]);
-    }
+    const raw = (codeToAdd || customLmsInput).trim();
+    if (!raw) return;
+    
+    // Virgülle ayrılmış birden fazla kod varsa parçala
+    const parts = raw.split(',').map(s => s.trim()).filter(Boolean);
+    
+    setLmsCourseIds(prev => {
+      const next = [...prev];
+      for (const p of parts) {
+        if (!next.includes(p)) {
+          next.push(p);
+        }
+      }
+      return next;
+    });
+
     setCustomLmsInput("");
     setLmsSearchQuery("");
   };
