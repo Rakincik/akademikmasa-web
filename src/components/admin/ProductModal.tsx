@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { X, CheckCircle, Upload, Plus, Trash2, ArrowRight, ArrowLeft, Loader2, Crop } from "lucide-react";
+import { X, CheckCircle, Upload, Plus, Trash2, ArrowRight, ArrowLeft, Loader2, Crop, Layers, RefreshCw, Search, Check, BookOpen } from "lucide-react";
 import { saveProduct } from "@/app/admin/kurslar/actions";
 import dynamic from "next/dynamic";
 import "react-quill-new/dist/quill.snow.css";
@@ -16,6 +16,13 @@ interface Instructor {
 interface Category {
   id: string;
   name: string;
+}
+
+interface MuroGroupItem {
+  id: string;
+  name: string;
+  code: string;
+  type?: string;
 }
 
 const quillModules = {
@@ -61,6 +68,13 @@ export default function ProductModal({ isOpen, onClose, instructors, categories,
     lmsCourseId: "",
   });
 
+  const [lmsCourseIds, setLmsCourseIds] = useState<string[]>([]);
+  const [muroGroups, setMuroGroups] = useState<MuroGroupItem[]>([]);
+  const [loadingMuroGroups, setLoadingMuroGroups] = useState(false);
+  const [isLmsDropdownOpen, setIsLmsDropdownOpen] = useState(false);
+  const [lmsSearchQuery, setLmsSearchQuery] = useState("");
+  const [customLmsInput, setCustomLmsInput] = useState("");
+
   const [recommendationIds, setRecommendationIds] = useState<string[]>([]);
   const [isRecommendationDropdownOpen, setIsRecommendationDropdownOpen] = useState(false);
 
@@ -77,10 +91,28 @@ export default function ProductModal({ isOpen, onClose, instructors, categories,
   const [isCategoryDropdownOpen, setIsCategoryDropdownOpen] = useState(false);
   const [isInstructorDropdownOpen, setIsInstructorDropdownOpen] = useState(false);
 
+  const fetchMuroGroups = async () => {
+    setLoadingMuroGroups(true);
+    try {
+      const res = await fetch("/api/admin/muro/groups");
+      if (res.ok) {
+        const data = await res.json();
+        if (data.groups && Array.isArray(data.groups)) {
+          setMuroGroups(data.groups);
+        }
+      }
+    } catch (e) {
+      console.warn("MURO grupları alınamadı:", e);
+    } finally {
+      setLoadingMuroGroups(false);
+    }
+  };
+
   // Initialize data if editing
   useEffect(() => {
     if (isOpen) {
       setErrorMsg("");
+      fetchMuroGroups();
       if (initialData) {
         setFormData({
           id: initialData.id,
@@ -98,6 +130,13 @@ export default function ProductModal({ isOpen, onClose, instructors, categories,
           isPublished: initialData.isPublished,
           lmsCourseId: initialData.lmsCourseId || "",
         });
+
+        // Initialize multi-LMS groups
+        const initialLms = Array.isArray(initialData.lmsCourseIds) && initialData.lmsCourseIds.length > 0
+          ? initialData.lmsCourseIds
+          : (initialData.lmsCourseId ? [initialData.lmsCourseId] : []);
+        setLmsCourseIds(initialLms);
+
         setFeatures(initialData.features || []);
         setPricingFeatures(initialData.pricingFeatures || []);
         setInstructorIds(initialData.instructors?.map((i: any) => i.id) || []);
@@ -111,6 +150,7 @@ export default function ProductModal({ isOpen, onClose, instructors, categories,
           id: "", title: "", slug: "", description: "", longDescription: "", price: "", salePrice: "",
           badge: "", priceBadge: "", rating: "5.0", reviewCount: "0", studentCount: "", isPublished: true, lmsCourseId: "",
         });
+        setLmsCourseIds([]);
         setFeatures([]);
         setPricingFeatures([]);
         setInstructorIds([]);
@@ -123,6 +163,24 @@ export default function ProductModal({ isOpen, onClose, instructors, categories,
       setStep(1);
     }
   }, [isOpen, initialData]);
+
+  const toggleLmsGroup = (code: string) => {
+    const cleanCode = code.trim();
+    if (!cleanCode) return;
+    setLmsCourseIds(prev => 
+      prev.includes(cleanCode) ? prev.filter(c => c !== cleanCode) : [...prev, cleanCode]
+    );
+  };
+
+  const addCustomLmsGroup = (codeToAdd?: string) => {
+    const code = (codeToAdd || customLmsInput).trim();
+    if (!code) return;
+    if (!lmsCourseIds.includes(code)) {
+      setLmsCourseIds(prev => [...prev, code]);
+    }
+    setCustomLmsInput("");
+    setLmsSearchQuery("");
+  };
 
   const generateSlug = (text: string) => {
     return text
@@ -252,7 +310,9 @@ export default function ProductModal({ isOpen, onClose, instructors, categories,
         pricingFeatures,
         instructorIds,
         categoryIds,
-        recommendationIds
+        recommendationIds,
+        lmsCourseId: lmsCourseIds[0] || "",
+        lmsCourseIds
       });
 
       onClose();
@@ -297,10 +357,182 @@ export default function ProductModal({ isOpen, onClose, instructors, categories,
                   <label className="block text-sm font-medium text-slate-700 mb-2">URL Slug</label>
                   <input type="text" value={formData.slug} onChange={e => setFormData({...formData, slug: e.target.value})} className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 outline-none" placeholder="turkce-oabt-canli-ders" />
                 </div>
-                <div className="col-span-2">
-                  <label className="block text-sm font-medium text-slate-700 mb-2">MURO LMS Grup / Kurs ID (Opsiyonel)</label>
-                  <input type="text" value={formData.lmsCourseId} onChange={e => setFormData({...formData, lmsCourseId: e.target.value})} className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 outline-none bg-indigo-50/50" placeholder="Örn: yks-sayisal-2024" />
-                  <p className="text-xs text-slate-500 mt-2">Öğrencinin satın aldıktan sonra sisteme kaydedileceği kurs ID'si. Boş bırakırsanız LMS entegrasyonu tetiklenmez.</p>
+                
+                {/* MURO LMS Çoklu Grup / Kurs Seçimi */}
+                <div className="col-span-2 bg-indigo-50/50 p-5 rounded-2xl border border-indigo-100/80">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-2">
+                      <Layers className="w-5 h-5 text-indigo-600" />
+                      <label className="text-sm font-semibold text-slate-800">MURO LMS Grupları / Paketleri (Çoklu Seçim)</label>
+                      {lmsCourseIds.length > 0 && (
+                        <span className="text-xs font-bold bg-indigo-600 text-white px-2.5 py-0.5 rounded-full">
+                          {lmsCourseIds.length} grup seçildi
+                        </span>
+                      )}
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={fetchMuroGroups}
+                      disabled={loadingMuroGroups}
+                      className="text-xs font-medium text-indigo-700 hover:text-indigo-900 bg-white/80 hover:bg-white border border-indigo-200 px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition-all shadow-sm"
+                      title="MURO LMS API'sinden grupları yenile"
+                    >
+                      <RefreshCw className={`w-3.5 h-3.5 ${loadingMuroGroups ? 'animate-spin' : ''}`} />
+                      {loadingMuroGroups ? 'Yenileniyor...' : "MURO'dan Yenile"}
+                    </button>
+                  </div>
+
+                  <p className="text-xs text-slate-600 mb-3">
+                    Öğrenci bu eğitimi satın aldığında aşağıda seçilen <strong>tüm MURO gruplarına/paketlerine</strong> otomatik olarak kaydedilir.
+                  </p>
+
+                  {/* Seçili Grupların Çipleri / Etiketleri */}
+                  <div className="relative">
+                    <div
+                      className="w-full min-h-[52px] p-2 bg-white rounded-xl border border-slate-200 focus-within:border-indigo-500 focus-within:ring-2 focus-within:ring-indigo-500/20 flex flex-wrap gap-2 items-center cursor-pointer transition-all shadow-sm"
+                      onClick={() => setIsLmsDropdownOpen(!isLmsDropdownOpen)}
+                    >
+                      {lmsCourseIds.length === 0 ? (
+                        <span className="text-slate-400 text-sm px-2">Grup seçmek veya eklemek için tıklayınız...</span>
+                      ) : (
+                        lmsCourseIds.map(code => {
+                          const matchedGroup = muroGroups.find(g => g.code === code);
+                          return (
+                            <span
+                              key={code}
+                              className="bg-indigo-600 text-white pl-3 pr-2 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-2 shadow-sm animate-in fade-in zoom-in-95"
+                            >
+                              <BookOpen className="w-3.5 h-3.5 text-indigo-200" />
+                              <span>{matchedGroup?.name && matchedGroup.name !== code ? `${matchedGroup.name} (${code})` : code}</span>
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  toggleLmsGroup(code);
+                                }}
+                                className="p-0.5 hover:bg-indigo-700 rounded transition-colors text-indigo-200 hover:text-white"
+                                title="Kaldır"
+                              >
+                                <X className="w-3.5 h-3.5" />
+                              </button>
+                            </span>
+                          );
+                        })
+                      )}
+                    </div>
+
+                    {/* Açılır Menü ve Arama / Manuel Ekleme */}
+                    {isLmsDropdownOpen && (
+                      <>
+                        <div className="fixed inset-0 z-30" onClick={() => setIsLmsDropdownOpen(false)}></div>
+                        <div className="relative z-40 mt-2 bg-white border border-slate-200 rounded-2xl shadow-xl p-3 max-h-80 overflow-y-auto animate-in fade-in slide-in-from-top-2">
+                          
+                          {/* Arama ve Manuel Giriş Alanı */}
+                          <div className="flex gap-2 mb-3 pb-3 border-b border-slate-100">
+                            <div className="relative flex-1">
+                              <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                              <input
+                                type="text"
+                                value={lmsSearchQuery}
+                                onChange={(e) => {
+                                  setLmsSearchQuery(e.target.value);
+                                  setCustomLmsInput(e.target.value);
+                                }}
+                                onKeyDown={(e) => {
+                                  if (e.key === 'Enter') {
+                                    e.preventDefault();
+                                    if (lmsSearchQuery.trim()) {
+                                      addCustomLmsGroup(lmsSearchQuery.trim());
+                                    }
+                                  }
+                                }}
+                                placeholder="Grup ara veya özel kod yazıp Enter'a bas..."
+                                className="w-full pl-9 pr-3 py-2 text-xs rounded-xl border border-slate-200 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
+                                autoFocus
+                              />
+                            </div>
+                            {lmsSearchQuery.trim() && (
+                              <button
+                                type="button"
+                                onClick={() => addCustomLmsGroup(lmsSearchQuery.trim())}
+                                className="px-3 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold flex items-center gap-1 transition-colors"
+                              >
+                                <Plus className="w-3.5 h-3.5" /> Ekle
+                              </button>
+                            )}
+                          </div>
+
+                          {/* Grup Listesi */}
+                          <div className="space-y-1">
+                            {(() => {
+                              const filtered = muroGroups.filter(g => 
+                                g.name?.toLowerCase().includes(lmsSearchQuery.toLowerCase()) ||
+                                g.code?.toLowerCase().includes(lmsSearchQuery.toLowerCase())
+                              );
+
+                              if (filtered.length === 0 && lmsSearchQuery.trim()) {
+                                return (
+                                  <div className="p-3 text-center">
+                                    <p className="text-xs text-slate-500 mb-2">Eşleşen hazır grup bulunamadı.</p>
+                                    <button
+                                      type="button"
+                                      onClick={() => addCustomLmsGroup(lmsSearchQuery.trim())}
+                                      className="px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded-lg text-xs font-bold inline-flex items-center gap-1 transition-colors"
+                                    >
+                                      <Plus className="w-3.5 h-3.5" /> &quot;{lmsSearchQuery.trim()}&quot; Özel Kod Olarak Ekle
+                                    </button>
+                                  </div>
+                                );
+                              }
+
+                              if (filtered.length === 0) {
+                                return (
+                                  <div className="p-4 text-center text-xs text-slate-500">
+                                    MURO LMS grubu listelenemedi. Yukarıdaki alana grup kodunu yazıp <strong>Enter</strong> tuşuna basarak ekleyebilirsiniz.
+                                  </div>
+                                );
+                              }
+
+                              return filtered.map(grp => {
+                                const isSelected = lmsCourseIds.includes(grp.code);
+                                return (
+                                  <div
+                                    key={grp.id || grp.code}
+                                    onClick={() => toggleLmsGroup(grp.code)}
+                                    className={`flex items-center justify-between p-2.5 rounded-xl cursor-pointer transition-all ${
+                                      isSelected ? 'bg-indigo-50/80 border border-indigo-200' : 'hover:bg-slate-50 border border-transparent'
+                                    }`}
+                                  >
+                                    <div className="flex items-center gap-2.5 min-w-0">
+                                      <div className={`w-4 h-4 rounded flex items-center justify-center border transition-colors ${
+                                        isSelected ? 'bg-indigo-600 border-indigo-600' : 'border-slate-300'
+                                      }`}>
+                                        {isSelected && <Check className="w-3 h-3 text-white" />}
+                                      </div>
+                                      <div className="truncate">
+                                        <span className={`text-xs font-semibold block truncate ${isSelected ? 'text-indigo-950' : 'text-slate-800'}`}>
+                                          {grp.name}
+                                        </span>
+                                        <span className="text-[10px] text-slate-400 font-mono block">
+                                          Kod: {grp.code}
+                                        </span>
+                                      </div>
+                                    </div>
+                                    {grp.type && (
+                                      <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-md bg-slate-100 text-slate-600 shrink-0">
+                                        {grp.type}
+                                      </span>
+                                    )}
+                                  </div>
+                                );
+                              });
+                            })()}
+                          </div>
+                        </div>
+                      </>
+                    )}
+                  </div>
                 </div>
               </div>
 

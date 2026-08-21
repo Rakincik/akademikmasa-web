@@ -52,7 +52,8 @@ model Product {
   isPublished     Boolean      @default(true)
   recommendationIds String[]
   order           Int          @default(0)
-  lmsCourseId     String?      // MURO LMS tarafındaki Paket/Kurs kodu
+  lmsCourseId     String?      // MURO LMS tarafındaki Paket/Kurs kodu (Tekil/Legacy)
+  lmsCourseIds    String[]     @default([]) // MURO LMS tarafındaki çoklu Paket/Grup kodları
   
   categories      Category[] @relation("ProductCategories")
   

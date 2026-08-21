@@ -86,7 +86,9 @@ export async function POST(request: Request) {
     console.log(`OSB ile sipariş başarıyla onaylandı ve COMPLETED oldu. Order ID: ${order.id}`);
 
     // LMS sırasına ekle
-    const hasLmsCourse = order.items.some((item: any) => item.product?.lmsCourseId);
+    const hasLmsCourse = order.items.some((item: any) => 
+      item.product?.lmsCourseId || (Array.isArray(item.product?.lmsCourseIds) && item.product.lmsCourseIds.length > 0)
+    );
     if (hasLmsCourse) {
       const existingJob = await prisma.lmsQueue.findUnique({ where: { orderId: order.id } });
       if (!existingJob) {

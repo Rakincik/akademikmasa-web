@@ -25,7 +25,8 @@ export async function saveProduct(data: any) {
     recommendationIds = [],
     instructorIds,
     categoryIds = [], // default to empty array
-    lmsCourseId
+    lmsCourseId,
+    lmsCourseIds = []
   } = data;
 
   const generatedSlug = slug || title
@@ -40,6 +41,11 @@ export async function saveProduct(data: any) {
     .replace(/[^a-z0-9 -]/g, "")
     .replace(/\s+/g, "-")
     .replace(/-+/g, "-");
+
+  // Format array and fallback string
+  const cleanLmsCourseIds = Array.isArray(lmsCourseIds)
+    ? Array.from(new Set(lmsCourseIds.map((s: string) => s.trim()).filter(Boolean)))
+    : (lmsCourseId ? [lmsCourseId.trim()] : []);
 
   const baseData = {
     title,
@@ -59,7 +65,8 @@ export async function saveProduct(data: any) {
     pricingFeatures,
     isPublished,
     recommendationIds,
-    lmsCourseId: lmsCourseId || null,
+    lmsCourseId: cleanLmsCourseIds[0] || lmsCourseId || null,
+    lmsCourseIds: cleanLmsCourseIds,
   };
 
   if (id) {

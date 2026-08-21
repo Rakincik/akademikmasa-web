@@ -127,7 +127,7 @@ export async function POST(request: Request) {
       }
       
       // LMS Kuyruğuna Ekle
-      const hasLmsCourse = dbProducts.some(p => p.lmsCourseId);
+      const hasLmsCourse = dbProducts.some(p => p.lmsCourseId || (Array.isArray(p.lmsCourseIds) && p.lmsCourseIds.length > 0));
       if (hasLmsCourse) {
         await prisma.lmsQueue.create({
           data: { orderId: order.id, status: 'PENDING' }

@@ -40,7 +40,10 @@ export async function updateOrderStatus(orderId: string, newStatus: string) {
       console.error("Kopya siparişler temizlenirken hata:", err);
     }
 
-    const hasLmsCourse = order.items.some((item) => (item.product as any)?.lmsCourseId);
+    const hasLmsCourse = order.items.some((item) => {
+      const prod: any = item.product;
+      return prod?.lmsCourseId || (Array.isArray(prod?.lmsCourseIds) && prod.lmsCourseIds.length > 0);
+    });
     
     if (hasLmsCourse) {
       const existingJob = await prisma.lmsQueue.findUnique({ where: { orderId: order.id } });

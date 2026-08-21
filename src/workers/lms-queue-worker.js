@@ -51,11 +51,16 @@ async function runWorker() {
     try {
       const user = job.order.user;
       
-      // Siparişteki LMS'e gönderilmesi gereken eğitimleri bul (lmsCourseId si olanlar)
-      const lmsItems = job.order.items.filter(item => item.product && item.product.lmsCourseId);
+      // Siparişteki LMS'e gönderilmesi gereken eğitimleri bul (lmsCourseId veya lmsCourseIds olanlar)
+      const lmsItems = job.order.items.filter(item => {
+        if (!item.product) return false;
+        const hasLegacy = !!item.product.lmsCourseId;
+        const hasArray = Array.isArray(item.product.lmsCourseIds) && item.product.lmsCourseIds.length > 0;
+        return hasLegacy || hasArray;
+      });
       
       if (lmsItems.length === 0) {
-        // Eğer bu siparişte lmsCourseId'si olan bir ürün yoksa gereksiz kuyruk oluşmuş demektir.
+        // Eğer bu siparişte LMS kurs ID'si olan bir ürün yoksa kuyruğu tamamla
         await prisma.lmsQueue.update({
           where: { id: job.id },
           data: { status: 'SUCCESS' }
@@ -75,16 +80,33 @@ async function runWorker() {
       let allSuccessful = true;
       let lastError = null;
 
-      // Siparişteki her bir LMS eğitimi için istek at (veya hepsi için tek istek atılabiliyorsa LMS API dökümanına göre)
-      // Biz her eğitim (PackageIdentifier) için bir istek atıyoruz.
+      // Siparişteki her ürün için tüm LMS gruplarını topla (tekrarsız)
+      const courseIdsToEnroll = [];
       for (const item of lmsItems) {
-        const lmsCourseId = item.product.lmsCourseId;
-        
+        const prod = item.product;
+        if (Array.isArray(prod.lmsCourseIds)) {
+          prod.lmsCourseIds.forEach(id => {
+            const clean = (id || '').trim();
+            if (clean && !courseIdsToEnroll.includes(clean)) {
+              courseIdsToEnroll.push(clean);
+            }
+          });
+        }
+        if (prod.lmsCourseId) {
+          const clean = prod.lmsCourseId.trim();
+          if (clean && !courseIdsToEnroll.includes(clean)) {
+            courseIdsToEnroll.push(clean);
+          }
+        }
+      }
+
+      // Her bir LMS eğitimi / paketi / grubu için istek at
+      for (const lmsCourseId of courseIdsToEnroll) {
         const payload = {
           TenantCode: MURO_TENANT_CODE,
           PackageIdentifier: lmsCourseId,
           UserEmail: lmsEmail,
-          UserPassword: user.password, // Şifreyi gönderiyoruz
+          UserPassword: user.password || '123456', // Öğrencinin web sitesindeki birebir şifresi
           UserFirstName: firstName,
           UserLastName: surname,
           UserPhone: lmsPhone || null,
@@ -113,9 +135,9 @@ async function runWorker() {
           const responseText = await response.text();
 
           if (response.status >= 200 && response.status < 300) {
-            console.log(`[SUCCESS] Öğrenci LMS'e tanımlandı. Sipariş ID: ${job.orderId}, Kurs: ${lmsCourseId}`);
+            console.log(`[SUCCESS] Öğrenci LMS'e tanımlandı. Sipariş ID: ${job.orderId}, Kurs/Grup: ${lmsCourseId}`);
           } else {
-            console.error(`[ERROR] LMS'e tanımlanırken HTTP ${response.status} hatası: ${responseText}`);
+            console.error(`[ERROR] LMS'e tanımlanırken HTTP ${response.status} hatası: ${responseText} (Grup: ${lmsCourseId})`);
             allSuccessful = false;
             lastError = `HTTP ${response.status}: ${responseText}`;
           }

@@ -88,7 +88,9 @@ async function syncShopierOrders() {
         processedCount++;
 
         // LMS kuyruğuna ekle
-        const hasLmsCourse = order.items.some((item) => item.product?.lmsCourseId);
+        const hasLmsCourse = order.items.some((item) => 
+          item.product?.lmsCourseId || (Array.isArray(item.product?.lmsCourseIds) && item.product.lmsCourseIds.length > 0)
+        );
         if (hasLmsCourse) {
           const existingJob = await prisma.lmsQueue.findUnique({ where: { orderId: order.id } });
           if (!existingJob) {
