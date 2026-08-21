@@ -54,7 +54,7 @@ export default async function PanelDashboard() {
           <div>
             <p className="text-sm font-bold text-slate-500">Ders Paneli</p>
             <Link 
-              href="https://akm.muro.click/admin/dashboard" 
+              href="https://online.akademikmasa.com" 
               target="_blank" 
               className="text-emerald-600 hover:text-emerald-700 font-bold text-sm flex items-center gap-1 mt-1 transition-colors"
             >

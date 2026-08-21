@@ -47,7 +47,7 @@ export default function SuccessPopup() {
           <p className="text-slate-500 mb-8">Eğitimleriniz hesabınıza tanımlandı. Hemen ders çalışmaya başlayabilirsiniz.</p>
           
           <Link 
-            href="https://akm.muro.click/admin/dashboard"
+            href="https://online.akademikmasa.com"
             target="_blank"
             className="w-full bg-brand-600 hover:bg-brand-700 text-white font-bold py-4 rounded-xl shadow-lg hover:shadow-brand-600/30 transition-all text-lg mb-4"
           >

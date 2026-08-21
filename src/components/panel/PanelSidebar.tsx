@@ -60,7 +60,7 @@ export default function PanelSidebar() {
         <div className="pt-6 pb-2">
           <div className="h-px bg-slate-100 w-full mb-4"></div>
           <Link
-            href="https://akm.muro.click/admin/dashboard"
+            href="https://online.akademikmasa.com"
             target="_blank"
             rel="noopener noreferrer"
             className="flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 font-medium text-slate-600 hover:bg-slate-50 hover:text-slate-900 group"

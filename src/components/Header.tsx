@@ -166,7 +166,7 @@ export default function Header() {
           <Link href="/kadromuz" className="hover:text-brand-500 transition-colors">Kadromuz</Link>
           <Link href="/iletisim" className="hover:text-brand-500 transition-colors">İletişim</Link>
           <Link href="https://www.youtube.com/@akademikmasa" target="_blank" rel="noopener noreferrer" className="bg-slate-800 hover:bg-slate-900 text-white py-2 rounded-xl font-bold transition-all hover:-translate-y-0.5 shadow-md hover:shadow-slate-800/30 text-sm text-center w-36 flex items-center justify-center shrink-0">Örnek Dersler</Link>
-          <Link href="https://akm.muro.click/admin/dashboard" target="_blank" rel="noopener noreferrer" className="bg-brand-600 hover:bg-brand-700 text-white py-2 rounded-xl font-bold transition-all hover:-translate-y-0.5 shadow-md hover:shadow-brand-600/30 text-sm text-center w-36 flex items-center justify-center shrink-0">Ders Paneli</Link>
+          <Link href="https://online.akademikmasa.com" target="_blank" rel="noopener noreferrer" className="bg-brand-600 hover:bg-brand-700 text-white py-2 rounded-xl font-bold transition-all hover:-translate-y-0.5 shadow-md hover:shadow-brand-600/30 text-sm text-center w-36 flex items-center justify-center shrink-0">Ders Paneli</Link>
         </nav>
 
         <div className="flex items-center gap-2 md:gap-4">
@@ -190,14 +190,17 @@ export default function Header() {
               </div>
             </Link>
           ) : (
-            <>
-              <Link href="/auth/login" className="text-slate-600 hover:text-brand-600 font-bold hidden md:block transition-colors">
+            <div className="flex items-center gap-1.5 sm:gap-2">
+              <Link href="/auth/login" className="text-slate-700 hover:text-brand-600 font-bold hidden md:block transition-colors text-sm px-3 py-2">
                 Giriş Yap
               </Link>
-              <Link href="/auth/register" className="bg-brand-600 hover:bg-brand-700 text-white px-4 sm:px-6 py-2 sm:py-2.5 rounded-xl font-bold transition-all hover:-translate-y-0.5 shadow-md hover:shadow-brand-600/30 ml-1 sm:ml-2 text-sm sm:text-base">
-                Kayıt Ol
+              <Link 
+                href="/auth/register" 
+                className="bg-brand-600 hover:bg-brand-700 text-white px-4 lg:px-5 py-2 sm:py-2.5 rounded-xl font-bold transition-all hover:-translate-y-0.5 shadow-md hover:shadow-brand-600/30 text-sm whitespace-nowrap flex items-center justify-center shrink-0"
+              >
+                Siteye Üye Ol
               </Link>
-            </>
+            </div>
           )}
           
           <button 
@@ -269,7 +272,7 @@ export default function Header() {
             <Link href="/kadromuz" onClick={() => setIsMobileMenuOpen(false)} className="hover:text-brand-500 transition-colors p-2 rounded-lg hover:bg-slate-50">Kadromuz</Link>
             <Link href="/iletisim" onClick={() => setIsMobileMenuOpen(false)} className="hover:text-brand-500 transition-colors p-2 rounded-lg hover:bg-slate-50">İletişim</Link>
             <Link href="https://www.youtube.com/@akademikmasa" target="_blank" rel="noopener noreferrer" onClick={() => setIsMobileMenuOpen(false)} className="bg-slate-800 hover:bg-slate-900 text-white px-4 py-2.5 rounded-xl font-bold transition-all text-center mx-2 mt-2 shadow-md">Örnek Dersler</Link>
-            <Link href="https://akm.muro.click/admin/dashboard" target="_blank" rel="noopener noreferrer" className="bg-brand-600 hover:bg-brand-700 text-white px-4 py-2.5 rounded-xl font-bold transition-all text-center mx-2 mt-2 shadow-md">Ders Paneli</Link>
+            <Link href="https://online.akademikmasa.com" target="_blank" rel="noopener noreferrer" className="bg-brand-600 hover:bg-brand-700 text-white px-4 py-2.5 rounded-xl font-bold transition-all text-center mx-2 mt-2 shadow-md">Ders Paneli</Link>
             <div className="h-px bg-slate-100 my-2"></div>
             {session ? (
               <Link href={(session?.user as any)?.role === "ADMIN" ? "/admin" : "/panel"} onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-3 p-3 bg-slate-50 rounded-xl mx-2 border border-slate-100">
@@ -284,7 +287,7 @@ export default function Header() {
             ) : (
               <div className="flex flex-col gap-2 px-2">
                 <Link href="/auth/login" onClick={() => setIsMobileMenuOpen(false)} className="text-slate-900 font-bold p-3 text-center border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors">Giriş Yap</Link>
-                <Link href="/auth/register" onClick={() => setIsMobileMenuOpen(false)} className="bg-brand-600 text-white font-bold p-3 text-center rounded-xl shadow-md hover:bg-brand-700 transition-colors">Kayıt Ol</Link>
+                <Link href="/auth/register" onClick={() => setIsMobileMenuOpen(false)} className="bg-brand-600 text-white font-bold p-3 text-center rounded-xl shadow-md hover:bg-brand-700 transition-colors">Siteye Üye Ol</Link>
               </div>
             )}
           </nav>

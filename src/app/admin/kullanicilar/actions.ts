@@ -60,3 +60,51 @@ export async function createUser(data: { name: string, email: string, password?:
     return { success: false, error: "Kullanıcı oluşturulurken bir hata oluştu." };
   }
 }
+
+export async function deleteUsers(userIds: string[]) {
+  if (!userIds || userIds.length === 0) {
+    return { success: false, error: "Silinecek kullanıcı seçilmedi." };
+  }
+
+  try {
+    // 1. Find all orders belonging to these users
+    const orders = await prisma.order.findMany({
+      where: { userId: { in: userIds } },
+      select: { id: true }
+    });
+    const orderIds = orders.map((o) => o.id);
+
+    if (orderIds.length > 0) {
+      // 2. Delete LMS queue items for these orders
+      await prisma.lmsQueue.deleteMany({
+        where: { orderId: { in: orderIds } }
+      });
+
+      // 3. Delete order items
+      await prisma.orderItem.deleteMany({
+        where: { orderId: { in: orderIds } }
+      });
+
+      // 4. Delete orders
+      await prisma.order.deleteMany({
+        where: { id: { in: orderIds } }
+      });
+    }
+
+    // 5. Delete users
+    await prisma.user.deleteMany({
+      where: { id: { in: userIds } }
+    });
+
+    revalidatePath("/admin/kullanicilar");
+    return { success: true };
+  } catch (error) {
+    console.error("Error deleting users:", error);
+    return { success: false, error: "Kullanıcı(lar) silinirken bir hata oluştu." };
+  }
+}
+
+export async function deleteUser(userId: string) {
+  return deleteUsers([userId]);
+}
+

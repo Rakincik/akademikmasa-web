@@ -117,7 +117,7 @@ export default async function OrdersPage() {
                     <div className="shrink-0 mt-4 sm:mt-0">
                       {order.status.startsWith("COMPLETED") ? (
                         <Link 
-                          href="https://akm.muro.click/admin/dashboard"
+                          href="https://online.akademikmasa.com"
                           target="_blank"
                           className="px-5 py-2.5 bg-brand-50 hover:bg-brand-100 text-brand-700 rounded-xl font-bold transition-colors text-sm flex items-center justify-center"
                         >

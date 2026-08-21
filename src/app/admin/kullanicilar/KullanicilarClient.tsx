@@ -23,10 +23,13 @@ import {
   UserX,
   MessageCircle,
   Download,
+  Trash2,
+  Loader2,
 } from "lucide-react";
 import Link from "next/link";
 import { User } from "@prisma/client";
-import { updateUser, createUser } from "./actions";
+import { updateUser, createUser, deleteUser, deleteUsers } from "./actions";
+import DeleteConfirmModal from "@/components/admin/DeleteConfirmModal";
 
 interface UserWithOrders extends User {
   orders?: {
@@ -45,6 +48,12 @@ export default function KullanicilarClient({ users }: KullanicilarClientProps) {
   const [searchTerm, setSearchTerm] = useState("");
   const [roleFilter, setRoleFilter] = useState<"ALL" | "PAID" | "UNPAID" | "ADMIN">("ALL");
   const [copiedId, setCopiedId] = useState<string | null>(null);
+
+  // Selection & Delete State
+  const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
+  const [userToDelete, setUserToDelete] = useState<UserWithOrders | null>(null);
+  const [isBulkDeleteModalOpen, setIsBulkDeleteModalOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   // Modal State
   const [editingUser, setEditingUser] = useState<UserWithOrders | null>(null);
@@ -134,6 +143,60 @@ export default function KullanicilarClient({ users }: KullanicilarClientProps) {
 
   const toggleSort = () => {
     setSortOrder((prev) => (prev === "asc" ? "desc" : "asc"));
+  };
+
+  const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.checked) {
+      setSelectedUsers(sortedUsers.map((u) => u.id));
+    } else {
+      setSelectedUsers([]);
+    }
+  };
+
+  const handleSelectUser = (id: string) => {
+    if (selectedUsers.includes(id)) {
+      setSelectedUsers(selectedUsers.filter((userId) => userId !== id));
+    } else {
+      setSelectedUsers([...selectedUsers, id]);
+    }
+  };
+
+  const confirmSingleDelete = async () => {
+    if (!userToDelete) return;
+    setIsDeleting(true);
+    try {
+      const res = await deleteUser(userToDelete.id);
+      if (res?.success) {
+        setSelectedUsers((prev) => prev.filter((id) => id !== userToDelete.id));
+      } else {
+        alert(res?.error || "Kullanıcı silinirken hata oluştu.");
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Kullanıcı silinemedi.");
+    } finally {
+      setIsDeleting(false);
+      setUserToDelete(null);
+    }
+  };
+
+  const confirmBulkDelete = async () => {
+    if (selectedUsers.length === 0) return;
+    setIsDeleting(true);
+    try {
+      const res = await deleteUsers(selectedUsers);
+      if (res?.success) {
+        setSelectedUsers([]);
+      } else {
+        alert(res?.error || "Kullanıcılar silinirken hata oluştu.");
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Kullanıcılar silinemedi.");
+    } finally {
+      setIsDeleting(false);
+      setIsBulkDeleteModalOpen(false);
+    }
   };
 
   const openEditModal = (user: UserWithOrders) => {
@@ -459,6 +522,35 @@ export default function KullanicilarClient({ users }: KullanicilarClientProps) {
         </div>
       </div>
 
+      {/* Bulk Operations Banner */}
+      {selectedUsers.length > 0 && (
+        <div className="bg-red-50 border border-red-200 p-4 rounded-2xl flex items-center justify-between animate-in fade-in slide-in-from-top-1 duration-200">
+          <div className="flex items-center gap-3">
+            <span className="text-red-700 font-bold text-xs md:text-sm">
+              {selectedUsers.length} adet kullanıcı seçildi.
+            </span>
+            <button
+              onClick={() => setSelectedUsers([])}
+              className="text-xs text-red-600 hover:text-red-800 underline font-medium cursor-pointer"
+            >
+              Seçimi Temizle
+            </button>
+          </div>
+          <button
+            onClick={() => setIsBulkDeleteModalOpen(true)}
+            disabled={isDeleting}
+            className="flex items-center gap-2 bg-red-600 hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed text-white px-4 py-2 rounded-xl font-bold transition-all text-xs shadow-sm cursor-pointer"
+          >
+            {isDeleting ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : (
+              <Trash2 className="w-4 h-4" />
+            )}
+            <span>{isDeleting ? "Siliniyor..." : "Seçilenleri Sil"}</span>
+          </button>
+        </div>
+      )}
+
       {/* Users Table */}
       {/* Desktop View: Table Layout (visible on md screens and above) */}
       <div className="hidden md:block bg-white rounded-2xl shadow-sm border border-slate-200/80 overflow-hidden">
@@ -466,6 +558,17 @@ export default function KullanicilarClient({ users }: KullanicilarClientProps) {
           <table className="w-full text-left text-xs">
             <thead className="bg-slate-50/80 text-slate-500 font-bold uppercase tracking-wider border-b border-slate-100">
               <tr>
+                <th className="px-4 py-4 w-10 text-center">
+                  <input
+                    type="checkbox"
+                    checked={
+                      sortedUsers.length > 0 &&
+                      selectedUsers.length === sortedUsers.length
+                    }
+                    onChange={handleSelectAll}
+                    className="w-4 h-4 rounded border-slate-300 text-brand-600 focus:ring-brand-500 cursor-pointer"
+                  />
+                </th>
                 <th
                   className="px-6 py-4 cursor-pointer hover:bg-slate-100 transition-colors group"
                   onClick={toggleSort}
@@ -496,7 +599,7 @@ export default function KullanicilarClient({ users }: KullanicilarClientProps) {
             <tbody className="divide-y divide-slate-100 text-slate-700 font-medium">
               {sortedUsers.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="px-6 py-12 text-center text-slate-400">
+                  <td colSpan={7} className="px-6 py-12 text-center text-slate-400">
                     Kriterlere uygun kullanıcı bulunamadı.
                   </td>
                 </tr>
@@ -523,8 +626,20 @@ export default function KullanicilarClient({ users }: KullanicilarClientProps) {
                   return (
                     <tr
                       key={user.id}
-                      className="hover:bg-slate-50/80 transition-colors group"
+                      className={`hover:bg-slate-50/80 transition-colors group ${
+                        selectedUsers.includes(user.id) ? "bg-red-50/30" : ""
+                      }`}
                     >
+                      {/* Selection Checkbox */}
+                      <td className="px-4 py-4 text-center">
+                        <input
+                          type="checkbox"
+                          checked={selectedUsers.includes(user.id)}
+                          onChange={() => handleSelectUser(user.id)}
+                          className="w-4 h-4 rounded border-slate-300 text-brand-600 focus:ring-brand-500 cursor-pointer"
+                        />
+                      </td>
+
                       {/* Name + Avatar */}
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-3">
@@ -647,6 +762,13 @@ export default function KullanicilarClient({ users }: KullanicilarClientProps) {
                           >
                             <Edit2 className="w-4 h-4" />
                           </button>
+                          <button
+                            onClick={() => setUserToDelete(user)}
+                            className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
+                            title="Kullanıcıyı Sil"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
                         </div>
                       </td>
                     </tr>
@@ -685,9 +807,22 @@ export default function KullanicilarClient({ users }: KullanicilarClientProps) {
             const waLink = getWhatsAppLink(user.name, user.phone || null);
 
             return (
-              <div key={user.id} className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm flex flex-col gap-3 animate-in fade-in-50 duration-200">
+              <div
+                key={user.id}
+                className={`bg-white p-4 rounded-2xl border transition-all duration-200 shadow-sm flex flex-col gap-3 animate-in fade-in-50 duration-200 ${
+                  selectedUsers.includes(user.id)
+                    ? "border-red-300 bg-red-50/20"
+                    : "border-slate-100"
+                }`}
+              >
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2.5">
+                    <input
+                      type="checkbox"
+                      checked={selectedUsers.includes(user.id)}
+                      onChange={() => handleSelectUser(user.id)}
+                      className="w-4 h-4 rounded border-slate-300 text-brand-600 focus:ring-brand-500 cursor-pointer mr-0.5"
+                    />
                     <div
                       className={`w-9 h-9 rounded-full flex items-center justify-center font-bold text-xs shrink-0 shadow-sm ${
                         user.role === "ADMIN"
@@ -798,6 +933,13 @@ export default function KullanicilarClient({ users }: KullanicilarClientProps) {
                       title="Düzenle"
                     >
                       <Edit2 className="w-4.5 h-4.5" />
+                    </button>
+                    <button
+                      onClick={() => setUserToDelete(user)}
+                      className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
+                      title="Sil"
+                    >
+                      <Trash2 className="w-4.5 h-4.5" />
                     </button>
                   </div>
                 </div>
@@ -976,6 +1118,29 @@ export default function KullanicilarClient({ users }: KullanicilarClientProps) {
           </div>
         </div>
       )}
+
+      {/* Single User Delete Confirmation Modal */}
+      <DeleteConfirmModal
+        isOpen={!!userToDelete}
+        onClose={() => setUserToDelete(null)}
+        onConfirm={confirmSingleDelete}
+        title="Kullanıcıyı Sil"
+        message={
+          userToDelete
+            ? `"${userToDelete.name}" (${userToDelete.email}) adlı kullanıcıyı sistemden silmek istediğinize emin misiniz? Bu işlem geri alınamaz ve kullanıcıya ait tüm sipariş geçmişi de silinir.`
+            : "Bu kullanıcıyı silmek istediğinize emin misiniz?"
+        }
+      />
+
+      {/* Bulk Delete Confirmation Modal */}
+      <DeleteConfirmModal
+        isOpen={isBulkDeleteModalOpen}
+        onClose={() => setIsBulkDeleteModalOpen(false)}
+        onConfirm={confirmBulkDelete}
+        title="Seçili Kullanıcıları Sil"
+        message={`Seçtiğiniz ${selectedUsers.length} adet kullanıcıyı sistemden silmek istediğinize emin misiniz? Bu işlem geri alınamaz ve kullanıcılara ait tüm sipariş geçmişi de silinir.`}
+      />
     </div>
   );
 }
+
