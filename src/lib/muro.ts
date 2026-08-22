@@ -4,7 +4,7 @@
  */
 
 const MURO_API_URL = process.env.MURO_API_URL || "https://online.akademikmasa.com/api/v1";
-const MURO_API_KEY = process.env.MURO_API_KEY || "muro_live_0aa2849b0c1c619be4ab62c6eca71c56";
+const MURO_API_KEY = process.env.MURO_API_KEY || "muro_live_3b06fbf8fd9fe828f60c896eb7c89251";
 
 export interface MuroPackage {
   id: string;
