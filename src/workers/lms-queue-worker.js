@@ -4,20 +4,8 @@ const { PrismaClient } = require('@prisma/client');
 
 const prisma = new PrismaClient();
 
-const MURO_API_URL = process.env.MURO_API_URL || 'http://localhost:5292';
-const MURO_WEBHOOK_SECRET = process.env.MURO_WEBHOOK_SECRET || 'CHANGE_THIS_IN_PRODUCTION';
-const MURO_TENANT_CODE = process.env.MURO_TENANT_CODE || 'derece';
-
-/**
- * Node.js & C# .NET API arasındaki Türkçe/Unicode karakter 
- * uyuşmazlığından kaynaklı imza hatalarını önleyen yardımcı serileştirici.
- */
-function serializePayload(payload) {
-  const json = JSON.stringify(payload);
-  return json.replace(/[^\x00-\x7F]/g, (char) => {
-    return '\\u' + char.charCodeAt(0).toString(16).toUpperCase().padStart(4, '0');
-  });
-}
+const MURO_API_URL = process.env.MURO_API_URL || 'https://online.akademikmasa.com/api/v1';
+const MURO_API_KEY = process.env.MURO_API_KEY || 'muro_live_3b06fbf8fd9fe828f60c896eb7c89251';
 
 async function runWorker() {
   // PENDING olan ya da daha önce hata alıp deneme hakkı 3'ten az olan kuyruk elemanlarını al
@@ -70,7 +58,7 @@ async function runWorker() {
 
       // Telefon ve ad-soyad formatlamaları
       const digits = (user.phone || '').replace(/\D/g, '');
-      const lmsPhone = digits.length >= 10 ? digits.slice(-10) : digits;
+      const lmsPhone = digits.length >= 10 ? (digits.length === 10 ? `0${digits}` : digits.slice(-11)) : digits;
       const lmsEmail = (user.email || '').trim();
       
       const nameParts = (user.name || 'Öğrenci').trim().split(/\s+/);
@@ -103,43 +91,39 @@ async function runWorker() {
       // Her bir LMS eğitimi / paketi / grubu için istek at
       for (const lmsCourseId of courseIdsToEnroll) {
         const payload = {
-          TenantCode: MURO_TENANT_CODE,
-          PackageIdentifier: lmsCourseId,
-          UserEmail: lmsEmail,
-          UserPassword: user.password || '123456', // Öğrencinin web sitesindeki birebir şifresi
-          UserFirstName: firstName,
-          UserLastName: surname,
-          UserPhone: lmsPhone || null,
-          OrderId: job.orderId,
-          PaidAt: job.order.createdAt.toISOString()
+          first_name: firstName,
+          last_name: surname,
+          email: lmsEmail,
+          phone: lmsPhone || undefined,
+          package_code: lmsCourseId,
+          order_id: job.orderId,
+          send_welcome_sms: true
         };
 
-        const rawJson = serializePayload(payload);
-        const signature = crypto
-          .createHmac('sha256', MURO_WEBHOOK_SECRET)
-          .update(rawJson)
-          .digest('hex');
-
-        const url = `${MURO_API_URL}/api/v1/webhooks/purchase`;
+        const url = `${MURO_API_URL}/connect/enroll`;
         
         try {
           const response = await fetch(url, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
-              'X-Webhook-Signature': signature
+              'X-Muro-Key': MURO_API_KEY
             },
-            body: rawJson
+            body: JSON.stringify(payload)
           });
 
-          const responseText = await response.text();
+          const responseData = await response.json().catch(() => null);
 
-          if (response.status >= 200 && response.status < 300) {
+          if (response.ok && (responseData?.success !== false)) {
             console.log(`[SUCCESS] Öğrenci LMS'e tanımlandı. Sipariş ID: ${job.orderId}, Kurs/Grup: ${lmsCourseId}`);
+            if (responseData?.magic_login_url) {
+              console.log(`[MAGIC LOGIN URL] ${responseData.magic_login_url}`);
+            }
           } else {
-            console.error(`[ERROR] LMS'e tanımlanırken HTTP ${response.status} hatası: ${responseText} (Grup: ${lmsCourseId})`);
+            const errDetail = responseData?.message || JSON.stringify(responseData) || `HTTP ${response.status}`;
+            console.error(`[ERROR] LMS'e tanımlanırken hata: ${errDetail} (Grup: ${lmsCourseId})`);
             allSuccessful = false;
-            lastError = `HTTP ${response.status}: ${responseText}`;
+            lastError = errDetail;
           }
         } catch (fetchErr) {
            console.error(`[ERROR] Ağ hatası:`, fetchErr.message);

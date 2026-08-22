@@ -1,15 +1,16 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { Plus, Eye, Edit, Trash2, GripVertical } from "lucide-react";
+import { Plus, Eye, Edit, Trash2, GripVertical, RefreshCw } from "lucide-react";
 import ProductModal from "@/components/admin/ProductModal";
 import DeleteConfirmModal from "@/components/admin/DeleteConfirmModal";
-import { deleteProduct, updateProductOrder } from "./actions";
+import { deleteProduct, updateProductOrder, syncMuroPackages } from "./actions";
 
 export default function KurslarClient({ products, instructors, categories }: { products: any[], instructors: any[], categories: any[] }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<any>(null);
   const [productToDelete, setProductToDelete] = useState<string | null>(null);
+  const [isSyncing, setIsSyncing] = useState(false);
   
   // Drag & Drop States
   const [productList, setProductList] = useState(products);
@@ -20,6 +21,18 @@ export default function KurslarClient({ products, instructors, categories }: { p
   useEffect(() => {
     setProductList(products);
   }, [products]);
+
+  const handleSyncMuro = async () => {
+    setIsSyncing(true);
+    try {
+      const res = await syncMuroPackages();
+      alert(res.message);
+    } catch (err: any) {
+      alert("Senkronizasyon hatası: " + (err.message || "Bilinmeyen hata"));
+    } finally {
+      setIsSyncing(false);
+    }
+  };
 
   const handleEdit = (product: any) => {
     setEditingProduct(product);
@@ -84,16 +97,28 @@ export default function KurslarClient({ products, instructors, categories }: { p
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-slate-900">Eğitimler ve Ürünler</h1>
-          <p className="text-slate-500 text-sm mt-1">Sistemdeki tüm eğitim paketlerini sürükleyip bırakarak (Grip ikonundan) sıralayabilirsiniz.</p>
+          <p className="text-slate-500 text-sm mt-1">Sistemdeki tüm eğitim paketlerini sürükleyip bırakarak (Grip ikonundan) sıralayabilir, MURO LMS ile senkronize edebilirsiniz.</p>
         </div>
         
-        <button 
-          onClick={handleAddNew} 
-          className="w-full sm:w-auto bg-brand-600 hover:bg-brand-700 text-white px-5 py-2.5 rounded-xl flex items-center justify-center gap-2 text-sm font-bold shadow-md hover:shadow-brand-600/30 transition-all cursor-pointer shrink-0"
-        >
-          <Plus className="w-5 h-5" />
-          <span>Yeni Eğitim Ekle</span>
-        </button>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={handleSyncMuro}
+            disabled={isSyncing}
+            className="w-full sm:w-auto bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-200 px-4 py-2.5 rounded-xl flex items-center justify-center gap-2 text-sm font-bold transition-all cursor-pointer shrink-0 disabled:opacity-60"
+            title="MURO LMS'teki aktif paketleri ve fiyatları web sitenizle senkronize eder"
+          >
+            <RefreshCw className={`w-4 h-4 text-brand-600 ${isSyncing ? "animate-spin" : ""}`} />
+            <span>{isSyncing ? "Eşitleniyor..." : "MURO'dan Paketleri Eşitle"}</span>
+          </button>
+
+          <button 
+            onClick={handleAddNew} 
+            className="w-full sm:w-auto bg-brand-600 hover:bg-brand-700 text-white px-5 py-2.5 rounded-xl flex items-center justify-center gap-2 text-sm font-bold shadow-md hover:shadow-brand-600/30 transition-all cursor-pointer shrink-0"
+          >
+            <Plus className="w-5 h-5" />
+            <span>Yeni Eğitim Ekle</span>
+          </button>
+        </div>
       </div>
 
       {/* Desktop View: Table Layout (visible on md screens and above) */}
