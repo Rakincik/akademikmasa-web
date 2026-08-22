@@ -4,7 +4,7 @@
  */
 
 const MURO_API_URL = process.env.MURO_API_URL || "https://online.akademikmasa.com/api/v1";
-const MURO_API_KEY = process.env.MURO_API_KEY || "muro_live_3b06fbf8fd9fe828f60c896eb7c89251";
+const MURO_API_KEY = process.env.MURO_API_KEY || "muro_live_0aa2849b0c1c619be4ab62c6eca71c56";
 
 export interface MuroPackage {
   id: string;
@@ -13,6 +13,17 @@ export interface MuroPackage {
   description?: string;
   price?: number;
   durationDays?: number;
+  courseTitles?: string[];
+  [key: string]: any;
+}
+
+export interface MuroGroup {
+  id: string;
+  code: string;
+  name: string;
+  description?: string;
+  educationType?: string;
+  memberCount?: number;
   courseTitles?: string[];
   [key: string]: any;
 }
@@ -71,7 +82,31 @@ export async function getMuroPackages(): Promise<MuroPackage[]> {
 }
 
 /**
- * 2. FONKSİYON: Öğrenciyi açar, pakete ekler, SMS gönderir ve Magic Login linki döner.
+ * 2. FONKSİYON: MURO'daki tüm canlı ders gruplarını çeker.
+ */
+export async function getMuroGroups(): Promise<MuroGroup[]> {
+  try {
+    const res = await fetch(`${MURO_API_URL}/connect/groups`, {
+      headers: {
+        "X-Muro-Key": MURO_API_KEY,
+        "Accept": "application/json"
+      },
+      next: { revalidate: 60 }
+    });
+
+    if (!res.ok) {
+      console.error(`MURO grup listesi çekilemedi (HTTP ${res.status}):`, await res.text());
+      return [];
+    }
+    return await res.json();
+  } catch (err) {
+    console.error("MURO grup listesi çekilirken ağ hatası:", err);
+    return [];
+  }
+}
+
+/**
+ * 3. FONKSİYON: Öğrenciyi açar, pakete/gruba ekler, SMS gönderir ve Magic Login linki döner.
  */
 export async function enrollMuroStudent(
   data: EnrollStudentParams
@@ -112,7 +147,7 @@ export async function enrollMuroStudent(
 }
 
 /**
- * 3. FONKSİYON: Ücretsiz deneme formlarından 7 günlük demo hesabı oluşturur.
+ * 4. FONKSİYON: Ücretsiz deneme formlarından 7 günlük demo hesabı oluşturur.
  */
 export async function createDemoLeadMuroStudent(data: {
   firstName: string;
@@ -151,7 +186,7 @@ export async function createDemoLeadMuroStudent(data: {
 }
 
 /**
- * 4. FONKSİYON: İade veya iptal durumunda paketi öğrenciden kaldırır.
+ * 5. FONKSİYON: İade veya iptal durumunda paketi öğrenciden kaldırır.
  */
 export async function unenrollMuroStudent(data: {
   email: string;
@@ -183,7 +218,7 @@ export async function unenrollMuroStudent(data: {
 }
 
 /**
- * 5. FONKSİYON: Canlı yayın durumu sorgulama (Canlı yayın bandı için).
+ * 6. FONKSİYON: Canlı yayın durumu sorgulama (Canlı yayın bandı için).
  */
 export async function getMuroLiveStatus(): Promise<LiveStatusResponse> {
   try {

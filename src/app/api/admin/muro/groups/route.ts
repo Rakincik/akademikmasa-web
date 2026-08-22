@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { auth } from '@/auth';
-import { getMuroPackages } from '@/lib/muro';
+import { getMuroPackages, getMuroGroups } from '@/lib/muro';
 
 export const dynamic = 'force-dynamic';
 
@@ -15,11 +15,26 @@ export async function GET() {
 
     const muroGroups: Array<{ id: string; name: string; code: string; type?: string }> = [];
 
-    // 1. Fetch packages from MURO Connect API using X-Muro-Key
+    // 1. Fetch both groups and packages in parallel from MURO Connect API
     try {
-      const packages = await getMuroPackages();
-      if (Array.isArray(packages)) {
-        packages.forEach((pkg: any) => {
+      const [groups, packages] = await Promise.allSettled([
+        getMuroGroups(),
+        getMuroPackages()
+      ]);
+
+      if (groups.status === 'fulfilled' && Array.isArray(groups.value)) {
+        groups.value.forEach((grp: any) => {
+          muroGroups.push({
+            id: grp.id?.toString() || grp.code || grp.name,
+            name: grp.name || grp.title || grp.code || grp.id,
+            code: grp.code || grp.id?.toString() || grp.name,
+            type: 'Grup'
+          });
+        });
+      }
+
+      if (packages.status === 'fulfilled' && Array.isArray(packages.value)) {
+        packages.value.forEach((pkg: any) => {
           muroGroups.push({
             id: pkg.id?.toString() || pkg.code || pkg.name,
             name: pkg.name || pkg.title || pkg.code || pkg.id,
@@ -29,7 +44,7 @@ export async function GET() {
         });
       }
     } catch (err: any) {
-      console.warn('MURO Connect packages fetch error:', err.message);
+      console.warn('MURO Connect fetch error:', err.message);
     }
 
     // 2. Also pull all previously saved / distinct lmsCourseIds from our own Database
@@ -39,6 +54,7 @@ export async function GET() {
       });
 
       const existingCodes = new Set(muroGroups.map(g => g.code));
+      const existingIds = new Set(muroGroups.map(g => g.id));
 
       for (const p of products) {
         const allCodes = [...(p.lmsCourseIds || [])];
@@ -47,7 +63,7 @@ export async function GET() {
         }
 
         for (const code of allCodes) {
-          if (code && !existingCodes.has(code)) {
+          if (code && !existingCodes.has(code) && !existingIds.has(code)) {
             existingCodes.add(code);
             muroGroups.push({
               id: code,
